@@ -105,7 +105,7 @@ class VIBlockchain {
    * @param {Integer} the identifier of the block
    * @returns {Block} the block
    */
-  get block(id) {
+  getBlockByIdk(id) {
     if (id < 0 || id > this._chain.length - 1)
       return null;
     return this._chain[id];
@@ -133,14 +133,13 @@ class VIBlockchain {
     if ( previousBlock + 1 !== newBlock.id) 
       return false;
 
-    // TODO: Check online if this is the correct way to do this
     if (previousBlock.timestamp < block.timestamp)
       return false;
     
     if (previousBlock.hash !== newBlock.previousHash)
       return false;
 
-    if (Block.getBlockHash(block) !== block.hash)
+    if (Block.calculateBlockHash(block, difficult) !== block.hash)
       return false;
 
     return true;
