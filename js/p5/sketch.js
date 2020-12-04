@@ -13,7 +13,6 @@ let blockShowCount = (size, spacing, width) => Math.floor(width / (size + spacin
 
 let blocksOffset = 0;
 
-let blockchain = new VIBlockchain()
 let shouldAddBlock = false;
 let newBlockAnimation = {animating: false, t: 0, duration: FRAME_RATE * 0.8}
 
@@ -59,8 +58,8 @@ function draw() {
 
   if (shouldAddBlock) {
     shouldAddBlock = false;
-    const newBlock = blockchain.generateNextBlock([])
-    blockchain.insertBlock(newBlock)
+    const newBlock = BLOCKCHAIN.generateNextBlock([])
+    BLOCKCHAIN.insertBlock(newBlock)
 
     newBlockAnimation.animating = true;
     newBlockAnimation.t = 0;
@@ -115,9 +114,9 @@ function drawBlockChain() {
   const lerpB = lerp(1, 0.85, lerpAmountB)
   const lerpC = lerpColor(color(200), color(100), lerpAmountB)
 
-  const count = Math.min(blockShowCount(size, spacing, width), blockchain.length)
+  const count = Math.min(blockShowCount(size, spacing, width), BLOCKCHAIN.length)
   for (let i = 0; i < count; i += 1) {
-    // const id = blockchain.length - i - 1;
+    // const id = BLOCKCHAIN.length - i - 1;
 
     let x = -(size + spacing) * i;
 
@@ -297,7 +296,7 @@ function minersManager() {
     // Mine a block
     for (var i = 0; i < transactionCount; i += 1) {
       let transaction = TRANSACTIONS.execute_first_transaction()
-      blockchain.latestBlock.data.push(transaction)
+      BLOCKCHAIN.latestBlock.data.push(transaction)
     }
 
     shouldAddBlock = true
@@ -357,7 +356,7 @@ function mouseDragged({movementX}) {
   }
 
   // let size = blockSize()
-  // let max = (blockchain.length - 1) * (size + blockSpacing(size))
+  // let max = (BLOCKCHAIN.length - 1) * (size + blockSpacing(size))
   const size = blockSize()
   const max = width * 0.5 - blockSize() * 0.5 - blockSpacing(size)
   if (offset > max) {

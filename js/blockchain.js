@@ -53,7 +53,7 @@ class Block {
  * The blockchain class to handle the whole blockchain
  * @author Jérôme Chételat
  */
-class VIBlockchain {
+const BLOCKCHAIN = new class {
 
   /**
    * Initialises a new VIBlockchain with a genesis block
