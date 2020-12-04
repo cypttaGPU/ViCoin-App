@@ -3,6 +3,7 @@ class Transaction {
         this._id_src = id_src;
         this._id_dest = id_dest;
         this._montant = montant;
+        this._timestamp = Date.now()
     }
 }
 
