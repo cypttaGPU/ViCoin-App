@@ -344,7 +344,7 @@ function drawMiners() {
 // P5 Events
 
 function doubleClicked() {
-  shouldAddBlock = true;
+  // shouldAddBlock = true;
 }
 
 function mouseDragged({movementX}) {
