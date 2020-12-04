@@ -6,6 +6,10 @@ class Wallet {
         this._solde = solde;
     }
 
+    get credits() {
+        return this._solde;
+    }
+
     hasSufficientCredit(montant){
         return this._solde >= montant;
     }
@@ -33,14 +37,18 @@ const WALLETS = new class {
         this._dictWallet = { };
     }
 
-    transfert_credit(id_src, id_dest, montant) {
-        if(this._dictWallet[id_src].removeCredit(montant)) {
-            this._dictWallet[id_dest].addCredit(montant);
-            console.log("Successful transaction !");
-        } else {
-            console.error("Error transaction !");
-        }
+    get(id) {
+        return this._dictWallet[id] || null;
     }
+
+    // transfert_credit(id_src, id_dest, montant) {
+    //     if(this._dictWallet[id_src].removeCredit(montant)) {
+    //         this._dictWallet[id_dest].addCredit(montant);
+    //         console.log("Successful transaction !");
+    //     } else {
+    //         console.error("Error transaction !");
+    //     }
+    // }
 
     makeWallet(solde) {
         let w = new Wallet(this._currId, solde);

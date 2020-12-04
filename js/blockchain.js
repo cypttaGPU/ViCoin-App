@@ -29,7 +29,7 @@ class Block {
    * Set a new hash value for the given block
    * @param {String} the new hash value to set
    */
-  set hash(newHash) {
+  setHash(newHash) {
     this.hash = newHash;
   }
 
@@ -59,7 +59,7 @@ class VIBlockchain {
    * Initialises a new VIBlockchain with a genesis block
    */
   constructor() {
-    let genesisBlock = new Block(0, "0", Date.now() / 1000, "Genesis Block", "100");
+    let genesisBlock = new Block(0, "0", Date.now(), [], "000");
 
     this._chain = [genesisBlock];
     this.difficulty = 2;
@@ -71,14 +71,22 @@ class VIBlockchain {
    * @returns {Block} The new block to add at the end of the chain.
    */
   generateNextBlock(transactions) {
-    let previousBlock = getLatestBlock();
+    let previousBlock = this.latestBlock;
     let nextIndex = previousBlock.id + 1;
-    let nextTimestamp = Date.now() / 1000; // Because Date.now() returns a the time in milliseconds
-    let block = new Block(nextIndex, previousBlock.hash, nextTimestamp, transactions, ""); 
- 
-    return block.setHash(Block.calculateBlockHash(block, this.difficulty));
+    let nextTimestamp = Date.now(); // Because Date.now() returns a the time in milliseconds
+    let block = new Block(nextIndex, previousBlock.hash, nextTimestamp, transactions, "");
+    block.setHash(Block.calculateBlockHash(block, this.difficulty));
+
+    return block;
   }
-  
+
+  /**
+   * Return the number of block in the blockchain
+   */
+  get length() {
+    return this._chain.length;
+  }
+
   /*
    * Return the last block mined in the blockchain
    * @return {Block} the last block mined
@@ -93,7 +101,7 @@ class VIBlockchain {
    * @returns {boolean} the block is successfully inserted
    */
   insertBlock(block) {
-    if (VIBlockchain.isValidNewBlock(block, this.latestBlock())) {
+    if (this.isValidNewBlock(block, this.latestBlock)) {
       this._chain.push(block);
       return true;
     }
@@ -105,12 +113,12 @@ class VIBlockchain {
    * @param {Integer} the identifier of the block
    * @returns {Block} the block
    */
-  getBlockByIdk(id) {
+  getBlock(id) {
     if (id < 0 || id > this._chain.length - 1)
       return null;
     return this._chain[id];
   }
-  
+
   /**
    * Returns a copy of the blockchain
    * @returns {Array} the current state of the blockchain
@@ -119,27 +127,29 @@ class VIBlockchain {
     return [...this._chain];
   }
 
-  set difficulty(newDifficulty) {
+  setDifficulty(newDifficulty) {
     return this.difficulty = newDifficulty;
   }
 
   /**
-   * Check the validity of a given block 
-   * @param {Block} the block to check the validity 
+   * Check the validity of a given block
+   * @param {Block} the block to check the validity
    * @param {Block} the block preceding the block to valid in the blockchain
    * @returns {boolean} the block is valid or not
    */
-  static isValidNewBlock(block, previousBlock) {
-    if ( previousBlock + 1 !== newBlock.id) 
+  isValidNewBlock(newBlock, previousBlock) {
+
+    if (previousBlock.id + 1 !== newBlock.id)
       return false;
 
-    if (previousBlock.timestamp < block.timestamp)
+    // TODO: Check online if this is the correct way to do this
+    if (previousBlock.timestamp > newBlock.timestamp)
       return false;
-    
+
     if (previousBlock.hash !== newBlock.previousHash)
       return false;
 
-    if (Block.calculateBlockHash(block, difficult) !== block.hash)
+    if (Block.calculateBlockHash(newBlock, this.difficulty) !== newBlock.hash)
       return false;
 
     return true;

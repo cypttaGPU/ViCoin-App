@@ -11,9 +11,18 @@ const TRANSACTIONS = new class {
         this._transactions_pool = [];
     }
 
+    get(i) {
+        return this._transactions_pool[i] || null;
+    }
+
+    get length() {
+        return this._transactions_pool.length
+    }
+
     transact(wallet_src, wallet_dest, montant) {
         if(wallet_src instanceof Wallet && wallet_dest instanceof Wallet) {
             if(wallet_src.hasSufficientCredit(montant)) {
+                wallet_src.removeCredit(montant);
                 this._transactions_pool.push(new Transaction(
                     wallet_src._id,
                     wallet_dest._id,
@@ -32,7 +41,10 @@ const TRANSACTIONS = new class {
         if(this._transactions_pool.length > 0) {
             let transaction = this._transactions_pool.shift();
             if(transaction instanceof Transaction) {
-                WALLETS.transfert_credit(transaction._id_src, transaction._id_dest, transaction._montant);
+                // WALLETS.transfert_credit(transaction._id_src, transaction._id_dest, transaction._montant);
+                WALLETS.get(transaction._id_dest).addCredit(transaction._montant);
+                console.log("Transaction successful !");
+                return transaction;
             } else {
                 console.log("Invalid type of Transaction detected ! Transaction dropped !");
             }
