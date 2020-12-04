@@ -1,4 +1,5 @@
 //export default wallets;
+const VERBOSE_WALLET = false
 
 class Wallet {
     constructor(id, solde) {
@@ -16,16 +17,16 @@ class Wallet {
 
     addCredit(montant) {
         this._solde += montant;
-        console.log("Credit added !");
+        if (VERBOSE_WALLET) console.log("Credit added !");
     }
 
     removeCredit(montant) {
         if(this.hasSufficientCredit(montant)) {
             this._solde -= montant;
-            console.log("Credit removed !");
+            if (VERBOSE_WALLET) console.log("Credit removed !");
             return true;
         } else {
-            console.error("Insufficient credit !");
+            if (VERBOSE_WALLET) console.error("Insufficient credit !");
             return false;
         }
     }
@@ -53,7 +54,7 @@ const WALLETS = new class {
     makeWallet(solde) {
         let w = new Wallet(this._currId, solde);
         this._dictWallet[this._currId] = w;
-        console.log("Wallet created !");
+        if (VERBOSE_WALLET) console.log("Wallet created !");
         this._currId++;
         return w;
     }

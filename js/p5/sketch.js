@@ -6,15 +6,12 @@ const BLOCK_MAX_SIZE = 128;
 const BLOCK_SPACING_RATIO = 0.5;
 
 // Variables
-let blockSize = () => Math.min(BLOCK_MAX_SIZE, height * BLOCK_MIN_SIZE_HEIGHT_RATIO)
-let blockSpacing = (size) => size * BLOCK_SPACING_RATIO
-let blockPositionX = (i, size, halfSize, spacing, width) => (width / 2) - ((spacing + size) * i)
-let blockShowCount = (size, spacing, width) => Math.floor(width / (size + spacing)) + 1
-
-let blocksOffset = 0;
+// let blockSize = () => Math.min(BLOCK_MAX_SIZE, height * BLOCK_MIN_SIZE_HEIGHT_RATIO)
+// let blockSpacing = (size) => size * BLOCK_SPACING_RATIO
+// let blockPositionX = (i, size, halfSize, spacing, width) => (width / 2) - ((spacing + size) * i)
+let blockShowCount = (size, spacing, width) => Math.floor(width / (size + spacing)) + 2
 
 let shouldAddBlock = false;
-let newBlockAnimation = {animating: false, t: 0, duration: FRAME_RATE * 0.8}
 
 let resize = { t: 0, frames: FRAME_RATE * 0.5 }
 let getParent = () => select('#sketch')
@@ -32,6 +29,7 @@ function setup() {
 
   frameRate(FRAME_RATE)
 
+  setupBlockChain()
   setupWallets()
   setupTransactions()
 }
@@ -56,17 +54,16 @@ function draw() {
     resizeCanvas(parent.width, parent.height)
   }
 
+  // Add block event
   if (shouldAddBlock) {
     shouldAddBlock = false;
     const newBlock = BLOCKCHAIN.generateNextBlock([])
     BLOCKCHAIN.insertBlock(newBlock)
 
-    newBlockAnimation.animating = true;
-    newBlockAnimation.t = 0;
-
-    // const size = blockSize()
-    // const max = width * 0.5 - blockSize() * 0.5 - blockSpacing(size)
-    // if (blocksOffset > max) blocksOffset = max;
+    if (selectedBlock === BLOCKCHAIN.length - 2) {
+      selectedBlock += 1
+      blocksOffset += OFFSET_MAX * 2
+    }
   }
 
   transactionManager()
@@ -79,83 +76,62 @@ function draw() {
 }
 
 // BLOCKCHAIN
+const SIZE = 128
+const SIZE_HALF = SIZE / 2
+const SIZE_SMALL = SIZE * 0.8
+const SPACING = 64
+const OFFSET_MAX = SIZE_HALF + SPACING / 2
+const OFFSET_ANIMATION_DURATION = 300
+const OFFSET_ANIMATION_SPEED_MIN = 0.2
+
+let selectedBlock = null;
+let blocksOffset = 0;
+let dragging = false;
+
+function setupBlockChain() {
+  selectedBlock = 0
+}
 
 function drawBlockChain() {
-  const size = blockSize();
-  const halfSize = size * 0.5;
-  const spacing = blockSpacing(size)
-  const BASE_Y = height * 0.8 - halfSize;
+  // update offset
+  if (!dragging) {
+    const offsetSpeed = Math.max(OFFSET_ANIMATION_SPEED_MIN, Math.abs(blocksOffset) / OFFSET_ANIMATION_DURATION)
+    const offsetMovement = offsetSpeed * deltaTime
 
-  let newBlockAnimationOffsetX = 0
-  let newBlockAnimationOffsetY = -halfSize
-  let lerpAmountA = 0
-  let lerpAmountB = 0
-  if (newBlockAnimation.animating) {
-    newBlockAnimation.t += 1;
-
-    if (newBlockAnimation.t <= newBlockAnimation.duration) {
-      // Run Animation
-
-      lerpAmountA = newBlockAnimation.t / newBlockAnimation.duration;
-      lerpAmountB = Math.min(newBlockAnimation.t / (newBlockAnimation.duration * 0.5), 1);
-
-      newBlockAnimationOffsetX = lerp(size + spacing, 0, lerpAmountA)
-      newBlockAnimationOffsetY = lerp(-spacing, 0, lerpAmountB)
-
+    if (Math.abs(blocksOffset) < offsetMovement) {
+      blocksOffset = 0
     } else {
-      // Animation ended
-      newBlockAnimation.animating = false;
+      blocksOffset += offsetMovement * (blocksOffset > 0 ? -1 : 1)
     }
   }
 
-  translate(width * 0.5 + blocksOffset, 0)
 
-  const lerpA = lerp(0.5, 1, lerpAmountB);
-  const lerpB = lerp(1, 0.85, lerpAmountB)
-  const lerpC = lerpColor(color(200), color(100), lerpAmountB)
+  translate(width / 2 + blocksOffset, height * 0.8)
 
-  const count = Math.min(blockShowCount(size, spacing, width), BLOCKCHAIN.length)
-  for (let i = 0; i < count; i += 1) {
-    // const id = BLOCKCHAIN.length - i - 1;
+  const showCountHalf = Math.floor(blockShowCount(SIZE, SPACING, width) / 2)
+  var minIndex = Math.max(0, selectedBlock - showCountHalf)
+  var maxIndex = Math.min(BLOCKCHAIN.length - 1, selectedBlock + showCountHalf)
 
-    let x = -(size + spacing) * i;
+  var x = -(SIZE + SPACING) * (selectedBlock - minIndex);
+  var y = 0;
 
-    let scaleValue = 1;
-    let y = BASE_Y;
+  for (var i = minIndex; i <= maxIndex; i += 1) {
 
-    let fillColor = color(255);
-    if (newBlockAnimation.animating) {
-      x += newBlockAnimationOffsetX
+    imageMode(CENTER)
 
-      if (i === 0) {
-        scaleValue = lerpA
-        fillColor = color(200)
-      } else if (i === 1) {
-        scaleValue = lerpB
-        fillColor = lerpC
-      } else {
-        scaleValue = 0.85
-        fillColor = color(100);
-      }
-
+    if (i === BLOCKCHAIN.length - 1) {
+      noTint()
     } else {
-      // Not animation
-      if (i == 0) {
-        fillColor = color(200)
-
-      } else {
-        scaleValue = 0.85
-        fillColor = color(100)
-      }
+      tint(150)
     }
 
-    // fill(fillColor);
-    // noStroke()
-    // rectMode(CENTER)
-    // rect(x, y, size * scaleValue, size * scaleValue)
-    imageMode(CENTER)
-    tint(fillColor)
-    image(blockImage, x, y, size * scaleValue, size * scaleValue)
+    if (i === selectedBlock) {
+      image(blockImage, x, y, SIZE, SIZE)
+    } else {
+      image(blockImage, x, y, SIZE_SMALL, SIZE_SMALL)
+    }
+
+    x += SIZE + SPACING
   }
 }
 
@@ -306,7 +282,6 @@ function minersManager() {
     var minerIndex = Math.floor(Math.random() * MINERS.length)
     var miner = MINERS[minerIndex]
     miner.credits += transactionCount * 0.01
-    console.log(`Block mined by ${miner.name}`)
 
     minerCooldown = Math.floor(Math.random() * (MINER_COOLDOWN.max - MINER_COOLDOWN.min) + MINER_COOLDOWN.min)
   }
@@ -342,27 +317,46 @@ function drawMiners() {
 
 // P5 Events
 
+function mouseClicked() {
+  shouldAddBlock = true
+}
+
 function doubleClicked() {
-  // shouldAddBlock = true;
+  // selectedBlock += mouseX <= width / 2 ? -1 : 1
+  // selectedBlock = Math.max(0, Math.min(selectedBlock, BLOCKCHAIN.length - 1))
+  // shouldAddBlock = true
+  // blocksOffset = -OFFSET_MAX * 5
 }
 
 function mouseDragged({movementX}) {
-  const offset = blocksOffset + movementX;
+  dragging = true
 
-  let min = -(width * 0.25)
-  if (offset < min) {
-    blocksOffset = min;
-    return;
+  blocksOffset += movementX;
+
+  while (blocksOffset < -OFFSET_MAX) {
+    if (selectedBlock === BLOCKCHAIN.length - 1) {
+      blocksOffset = -OFFSET_MAX
+      break;
+    }
+
+    selectedBlock += 1
+    blocksOffset = OFFSET_MAX + (blocksOffset + OFFSET_MAX)
   }
 
-  // let size = blockSize()
-  // let max = (BLOCKCHAIN.length - 1) * (size + blockSpacing(size))
-  const size = blockSize()
-  const max = width * 0.5 - blockSize() * 0.5 - blockSpacing(size)
-  if (offset > max) {
-    blocksOffset = max
-    return
+  while (blocksOffset > OFFSET_MAX) {
+    if (selectedBlock === 0) {
+      blocksOffset = OFFSET_MAX
+      break;
+    }
+
+    selectedBlock -= 1
+    blocksOffset = -OFFSET_MAX + (blocksOffset - OFFSET_MAX)
   }
 
-  blocksOffset = offset;
+  selectedBlock = Math.max(0, Math.min(selectedBlock, BLOCKCHAIN.length - 1))
+  blocksOffset = blocksOffset
+}
+
+function mouseReleased() {
+  dragging = false
 }

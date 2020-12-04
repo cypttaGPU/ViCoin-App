@@ -1,3 +1,5 @@
+const VERBOSE_TRANSACTION = false
+
 class Transaction {
     constructor(id_src, id_dest, montant) {
         this._id_src = id_src;
@@ -29,12 +31,12 @@ const TRANSACTIONS = new class {
                     wallet_dest._id,
                     montant
                 ));
-                console.log("Transaction added to the pool !");
+                if (VERBOSE_TRANSACTION) console.log("Transaction added to the pool !");
             } else {
-                console.log("Insufficient credit !");
+                if (VERBOSE_TRANSACTION) console.log("Insufficient credit !");
             }
         } else {
-            console.error("Invalid type of Wallet detected !");
+            if (VERBOSE_TRANSACTION) console.error("Invalid type of Wallet detected !");
         }
     }
 
@@ -44,10 +46,10 @@ const TRANSACTIONS = new class {
             if(transaction instanceof Transaction) {
                 // WALLETS.transfert_credit(transaction._id_src, transaction._id_dest, transaction._montant);
                 WALLETS.get(transaction._id_dest).addCredit(transaction._montant);
-                console.log("Transaction successful !");
+                if (VERBOSE_TRANSACTION) console.log("Transaction successful !");
                 return transaction;
             } else {
-                console.log("Invalid type of Transaction detected ! Transaction dropped !");
+                if (VERBOSE_TRANSACTION) console.log("Invalid type of Transaction detected ! Transaction dropped !");
             }
         }
     }
