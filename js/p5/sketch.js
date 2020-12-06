@@ -121,7 +121,7 @@ function drawBlockChain() {
     if (i === BLOCKCHAIN.length - 1) {
       noTint()
     } else {
-      tint(150)
+      tint(200)
     }
 
     let img
@@ -316,9 +316,15 @@ function drawMiners() {
 }
 
 // P5 Events
+let mouseStartedOnBockchain = false
+
+function mousePressed() {
+  const targetY = height * 0.8
+  mouseStartedOnBockchain = mouseY >= targetY - SIZE_HALF && mouseY <= targetY + SIZE_HALF
+}
 
 function mouseDragged({movementX}) {
-  if (movementX > 5) {
+  if (mouseStartedOnBockchain &&  Math.abs(movementX) > 5) {
     dragging = true
 
     blocksOffset += movementX;
@@ -352,20 +358,17 @@ function mouseReleased() {
   if (dragging) {
     dragging = false
 
-  } else {
-    const targetY = height * 0.8
-    if (mouseY >= targetY - SIZE_HALF && mouseY <= targetY + SIZE_HALF) {
-      let offset = mouseX - width / 2
-      const direction = offset < 0 ? -1 : 1
-      offset *= direction
-      offset += SIZE_HALF
+  } else if (mouseStartedOnBockchain) {
+    let offset = mouseX - width / 2
+    const direction = offset < 0 ? -1 : 1
+    offset *= direction
+    offset += SIZE_HALF
 
-      const blockSpace = SIZE + SPACING
-      const indexOffset = Math.floor(offset / blockSpace) * direction
-      if (offset % blockSpace < SIZE) {
-        selectedBlock += indexOffset
-        blocksOffset += indexOffset * OFFSET_MAX * 2
-      }
+    const blockSpace = SIZE + SPACING
+    const indexOffset = Math.floor(offset / blockSpace) * direction
+    if (offset % blockSpace < SIZE) {
+      selectedBlock += indexOffset
+      blocksOffset += indexOffset * OFFSET_MAX * 2
     }
   }
 }
