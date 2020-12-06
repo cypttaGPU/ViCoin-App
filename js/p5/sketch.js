@@ -1,4 +1,5 @@
 const FRAME_RATE = 30;
+let TIME_SPEED = 10.0;
 
 // Block Chain constants
 const BLOCK_MIN_SIZE_HEIGHT_RATIO = 0.25
@@ -78,25 +79,24 @@ function draw() {
 // BLOCKCHAIN
 const SIZE = 128
 const SIZE_HALF = SIZE / 2
-const SIZE_SMALL = SIZE * 0.8
+const SIZE_BIG = SIZE * 1.1
 const SPACING = 64
 const OFFSET_MAX = SIZE_HALF + SPACING / 2
 const OFFSET_ANIMATION_DURATION = 300
 const OFFSET_ANIMATION_SPEED_MIN = 0.2
 
-let selectedBlock = null;
+let selectedBlock = 0;
 let blocksOffset = 0;
 let dragging = false;
 
 function setupBlockChain() {
-  selectedBlock = 0
 }
 
 function drawBlockChain() {
   // update offset
   if (!dragging) {
     const offsetSpeed = Math.max(OFFSET_ANIMATION_SPEED_MIN, Math.abs(blocksOffset) / OFFSET_ANIMATION_DURATION)
-    const offsetMovement = offsetSpeed * deltaTime
+    const offsetMovement = offsetSpeed * deltaTime * TIME_SPEED
 
     if (Math.abs(blocksOffset) < offsetMovement) {
       blocksOffset = 0
@@ -104,7 +104,6 @@ function drawBlockChain() {
       blocksOffset += offsetMovement * (blocksOffset > 0 ? -1 : 1)
     }
   }
-
 
   translate(width / 2 + blocksOffset, height * 0.8)
 
@@ -125,11 +124,13 @@ function drawBlockChain() {
       tint(150)
     }
 
+    let img
     if (i === selectedBlock) {
-      image(blockImage, x, y, SIZE, SIZE)
+      img = image(blockImage, x, y, SIZE_BIG, SIZE_BIG)
     } else {
-      image(blockImage, x, y, SIZE_SMALL, SIZE_SMALL)
+      img = image(blockImage, x, y, SIZE, SIZE)
     }
+
 
     x += SIZE + SPACING
   }
@@ -181,7 +182,7 @@ function drawWallets() {
 
 // TRANSACTIONS
 const TRANSACTIONS_AMOUNT_MIN = 6.0
-const TRANSACTION_COOLDOWN = { min: FRAME_RATE * 5, max: FRAME_RATE * 10 }
+const TRANSACTION_COOLDOWN = { min: 5000, max: 10000 }
 let transactionCooldown = TRANSACTION_COOLDOWN.min;
 
 function setupTransactions() {
@@ -190,7 +191,7 @@ function setupTransactions() {
 
 function drawTransactions() {
   textAlign('right')
-  text(`next transaction in ${Math.floor(transactionCooldown / FRAME_RATE * 10) / 10}`, width - 25, height - 25)
+  text(`next transaction in ${Math.floor(transactionCooldown / 1000 * 10) / 10}`, width - 25, height - 25)
 
   let x = width - 25
   let y = 40
@@ -224,7 +225,7 @@ function drawTransactions() {
 
 function transactionManager() {
 
-  transactionCooldown -= 1;
+  transactionCooldown -= deltaTime * TIME_SPEED;
 
   // Create new transaction
   if (transactionCooldown <= 0) {
@@ -264,7 +265,7 @@ function setupMiners() {
 
 function minersManager() {
 
-  minerCooldown -= 1;
+  minerCooldown -= deltaTime * TIME_SPEED;
   if (minerCooldown <= 0) {
 
     const transactionCount = Math.min(TRANSACTIONS.length, MAX_TRANSACTION_PER_BLOCK)
@@ -276,7 +277,6 @@ function minersManager() {
     }
 
     shouldAddBlock = true
-    newBlockAnimation.animating = true;
 
     // Chose miner to gain the fee.
     var minerIndex = Math.floor(Math.random() * MINERS.length)
@@ -289,7 +289,7 @@ function minersManager() {
 
 function drawMiners() {
   textAlign('right')
-  text(`next block mined in ${Math.floor(minerCooldown / FRAME_RATE * 10) / 10}`, width - 25, height - 10)
+  text(`next block mined in ${Math.floor(minerCooldown / 1000 * 10) / 10}`, width - 25, height - 10)
 
   let x = width / 2
   let y = 40
@@ -317,46 +317,55 @@ function drawMiners() {
 
 // P5 Events
 
-function mouseClicked() {
-  shouldAddBlock = true
-}
-
-function doubleClicked() {
-  // selectedBlock += mouseX <= width / 2 ? -1 : 1
-  // selectedBlock = Math.max(0, Math.min(selectedBlock, BLOCKCHAIN.length - 1))
-  // shouldAddBlock = true
-  // blocksOffset = -OFFSET_MAX * 5
-}
-
 function mouseDragged({movementX}) {
-  dragging = true
+  if (movementX > 5) {
+    dragging = true
 
-  blocksOffset += movementX;
+    blocksOffset += movementX;
 
-  while (blocksOffset < -OFFSET_MAX) {
-    if (selectedBlock === BLOCKCHAIN.length - 1) {
-      blocksOffset = -OFFSET_MAX
-      break;
+    while (blocksOffset < -OFFSET_MAX) {
+      if (selectedBlock === BLOCKCHAIN.length - 1) {
+        blocksOffset = -OFFSET_MAX
+        break;
+      }
+
+      selectedBlock += 1
+      blocksOffset = OFFSET_MAX + (blocksOffset + OFFSET_MAX)
     }
 
-    selectedBlock += 1
-    blocksOffset = OFFSET_MAX + (blocksOffset + OFFSET_MAX)
-  }
+    while (blocksOffset > OFFSET_MAX) {
+      if (selectedBlock === 0) {
+        blocksOffset = OFFSET_MAX
+        break;
+      }
 
-  while (blocksOffset > OFFSET_MAX) {
-    if (selectedBlock === 0) {
-      blocksOffset = OFFSET_MAX
-      break;
+      selectedBlock -= 1
+      blocksOffset = -OFFSET_MAX + (blocksOffset - OFFSET_MAX)
     }
 
-    selectedBlock -= 1
-    blocksOffset = -OFFSET_MAX + (blocksOffset - OFFSET_MAX)
+    selectedBlock = Math.max(0, Math.min(selectedBlock, BLOCKCHAIN.length - 1))
+    blocksOffset = blocksOffset
   }
-
-  selectedBlock = Math.max(0, Math.min(selectedBlock, BLOCKCHAIN.length - 1))
-  blocksOffset = blocksOffset
 }
 
 function mouseReleased() {
-  dragging = false
+  if (dragging) {
+    dragging = false
+
+  } else {
+    const targetY = height * 0.8
+    if (mouseY >= targetY - SIZE_HALF && mouseY <= targetY + SIZE_HALF) {
+      let offset = mouseX - width / 2
+      const direction = offset < 0 ? -1 : 1
+      offset *= direction
+      offset += SIZE_HALF
+
+      const blockSpace = SIZE + SPACING
+      const indexOffset = Math.floor(offset / blockSpace) * direction
+      if (offset % blockSpace < SIZE) {
+        selectedBlock += indexOffset
+        blocksOffset += indexOffset * OFFSET_MAX * 2
+      }
+    }
+  }
 }
