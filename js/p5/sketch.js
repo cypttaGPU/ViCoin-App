@@ -1,5 +1,5 @@
 const FRAME_RATE = 30;
-let TIME_SPEED = 10.0;
+let TIME_SPEED = 1.0;
 
 // Block Chain constants
 const BLOCK_MIN_SIZE_HEIGHT_RATIO = 0.25
@@ -366,7 +366,8 @@ function mouseReleased() {
 
     const blockSpace = SIZE + SPACING
     const indexOffset = Math.floor(offset / blockSpace) * direction
-    if (offset % blockSpace < SIZE) {
+    const index = selectedBlock + indexOffset
+    if (index >= 0 && index < BLOCKCHAIN.length && offset % blockSpace < SIZE) {
       selectedBlock += indexOffset
       blocksOffset += indexOffset * OFFSET_MAX * 2
     }
