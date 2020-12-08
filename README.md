@@ -51,7 +51,7 @@ En apprenant la technologie, nous avons mis en place 2 catégories d'interaction
 - Abstract/Elaborate: Permettre d'afficher les données dans nos coffres en cliquant sur eux.
 - Explore: Permettre de modifier la liste de transactions pour voir le résultat.
 
-Il était important pour nous de conserver ce système sous forme de simulateur, cependant nous cherchions également à rendre ce système ludique afin de permettre de permettre d'avoir une certaine satisfaction.
+Il était important pour nous de conserver ce système sous forme de simulateur, cependant nous cherchions également à rendre ce système ludique afin de permettre d'avoir une certaine satisfaction.
 De plus, nous avons décidé de simplifier l'algorithme de cryptomonnaie pour faciliter la compréhension et la mémorisation de nos utilisateurs (Slide 9 du cours 7).
 
 Toute notre mise en place a été mûrement réfléchie avant d'être réalisée. Après avoir décidé du sujet, nous avons décidé de son contenu et de son apparence en faisant une maquette/Mockup (Slide 17 du cours 7) avec un Whiteboard collaboratif.
