@@ -56,7 +56,7 @@ De plus, nous avons décidé de simplifier l'algorithme de cryptomonnaie pour fa
 
 Toute notre mise en place a été mûrement réfléchie avant d'être réalisée. Après avoir décidé du sujet, nous avons décidé de son contenu et de son apparence en faisant une maquette/Mockup (Slide 17 du cours 7) avec un Whiteboard collaboratif.
 
-<div style="text-align: center"><img src="./doc_img/whiteboard_meeting.png" title="Whiteboard collaboratif" height="150px"/></div>
+<div style="text-align: center"><img src="./doc_img/whiteboard_meeting_interface.png" title="Whiteboard collaboratif" height="150px"/></div>
 
 Le principe utilisé pour la visualisation était d'avoir un point de vue global ("Overview") et détaillé par interactions (Slide 19 et 20 du cours 8).
 
