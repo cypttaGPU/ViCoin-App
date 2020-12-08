@@ -33,6 +33,7 @@ function setup() {
   setupBlockChain()
   setupWallets()
   setupTransactions()
+  setupMiners()
 }
 
 function subdraw(f) {
@@ -184,12 +185,46 @@ function drawWallets() {
 const TRANSACTIONS_AMOUNT_MIN = 6.0
 const TRANSACTION_COOLDOWN = { min: 5000, max: 10000 }
 let transactionCooldown = TRANSACTION_COOLDOWN.min;
+let transactionForm;
+let toSend = null;
 
 function setupTransactions() {
+  const div = select('#transaction-form')
+  const amount = document.getElementById('transaction-amount');
+  const to = document.getElementById('transaction-to');
+  const send = document.getElementById('transaction-send');
 
+  div.position(width / 2 - div.width / 2, height / 2 - div.height / 2)
+
+  for (var i = 1; i < WALLET_COUNT; i += 1) {
+    const option = document.createElement('OPTION')
+    option.label = WALLET_INFO[i].name
+    option.value = i
+    to.add(option)
+  }
+
+  amount.oninput = () => {
+    const value = amount.value;
+    const period = value.indexOf('.')
+    if (period >= 0) {
+      amount.value = value.substring(0, period + 3)
+    }
+  }
+
+  send.onclick = () => {
+    toSend = {amount: Number(amount.value), to: Number(to.value)}
+  }
+
+  transactionForm = {div, amount, to, send}
 }
 
 function drawTransactions() {
+  // Update transaction form
+  const cannotSend = transactionForm.amount.value <= 0 || transactionForm.amount.value > WALLETS.get(0)._solde
+  transactionForm.send.disabled = toSend || cannotSend
+  transactionForm.amount.style = cannotSend ? 'border: 1px solid red' : 'border: 1px solid transparent'
+
+  // Show when the next automatic action will be executed
   textAlign('right')
   text(`next transaction in ${Math.floor(transactionCooldown / 1000 * 10) / 10}`, width - 25, height - 25)
 
@@ -225,19 +260,25 @@ function drawTransactions() {
 
 function transactionManager() {
 
+  if (toSend) {
+    const {amount, to} = toSend
+    if (amount !== NaN && to !== NaN
+      && to > 0 && to < WALLET_COUNT
+      && amount > 0 && amount <= WALLETS.get(0)._solde) {
+
+      TRANSACTIONS.transact(WALLETS.get(0), WALLETS.get(to), amount)
+    }
+
+    toSend = null
+  }
+
   transactionCooldown -= deltaTime * TIME_SPEED;
-
-  // Create new transaction
   if (transactionCooldown <= 0) {
-    var indexA = Math.floor(Math.random() * WALLET_COUNT)
-    var indexB = Math.floor(Math.random() * (WALLET_COUNT - 1) + 1)
+    walletA = Math.floor(Math.random() * (WALLET_COUNT - 1) + 1)
+    walletB = Math.floor(Math.random() * (WALLET_COUNT - 1) + 1)
+    if (walletA == walletB) walletB = 0
 
-    var numbers = [...Array(WALLET_COUNT).keys()]
-    numbers[0] = [numbers[indexA], numbers[indexA] =numbers[0]][0]
-    numbers[1] = [numbers[indexB], numbers[indexB] =numbers[1]][0]
-
-    var [walletA, walletB] = numbers
-    var amount = WALLETS.get(walletA).credits * 0.1; // 10% of credits
+    amount = WALLETS.get(walletA).credits * 0.1; // 10% of credits
     amount = Math.round(amount * 100) / 100; // round to 2 decimals
     amount = Math.max(TRANSACTIONS_AMOUNT_MIN, amount); // minimum credits per transaction
 
@@ -256,38 +297,68 @@ const MINERS = [
 ]
 
 const MAX_TRANSACTION_PER_BLOCK = 5
+const FORCE_MINE_TRANSACTION_COUNT = 15
 const MINER_COOLDOWN = { min: TRANSACTION_COOLDOWN.min * 2, max: TRANSACTION_COOLDOWN.max * MAX_TRANSACTION_PER_BLOCK }
 let minerCooldown = MINER_COOLDOWN.max;
+let userMined = false
+let mineForm
 
 function setupMiners() {
+  const div = select('#miner-form')
+  const send = document.getElementById('miner-send')
 
+  div.position(width / 2 - div.width / 2, 0)
+
+  send.onclick = () => {
+    userMined = true
+  }
+
+  mineForm = {div, send}
 }
 
 function minersManager() {
 
+  if (userMined) {
+    minerCooldown = 0
+  }
+
+  // force to mine a block if there is too much transactions
+  if (TRANSACTIONS.length >= FORCE_MINE_TRANSACTION_COUNT) {
+    minerCooldown = 0
+  }
+
   minerCooldown -= deltaTime * TIME_SPEED;
   if (minerCooldown <= 0) {
 
-    const transactionCount = Math.min(TRANSACTIONS.length, MAX_TRANSACTION_PER_BLOCK)
+    if (TRANSACTIONS.length > 0) {
+      const transactionCount = Math.min(TRANSACTIONS.length, MAX_TRANSACTION_PER_BLOCK)
 
-    // Mine a block
-    for (var i = 0; i < transactionCount; i += 1) {
-      let transaction = TRANSACTIONS.execute_first_transaction()
-      BLOCKCHAIN.latestBlock.data.push(transaction)
+      // Mine a block
+      for (var i = 0; i < transactionCount; i += 1) {
+        let transaction = TRANSACTIONS.execute_first_transaction()
+        BLOCKCHAIN.latestBlock.data.push(transaction)
+      }
+
+      shouldAddBlock = true
+
+      // Chose miner to gain the fee.
+      var minerIndex = Math.floor(Math.random() * (MINERS.length - 1) + 1)
+      var miner = MINERS[userMined ? 0 : minerIndex]
+      miner.credits += transactionCount * 0.01
     }
 
-    shouldAddBlock = true
-
-    // Chose miner to gain the fee.
-    var minerIndex = Math.floor(Math.random() * MINERS.length)
-    var miner = MINERS[minerIndex]
-    miner.credits += transactionCount * 0.01
-
     minerCooldown = Math.floor(Math.random() * (MINER_COOLDOWN.max - MINER_COOLDOWN.min) + MINER_COOLDOWN.min)
+  }
+
+  if (userMined) {
+    userMined = false
   }
 }
 
 function drawMiners() {
+  // Updat eminer form
+  mineForm.send.disabled = TRANSACTIONS.length === 0
+
   textAlign('right')
   text(`next block mined in ${Math.floor(minerCooldown / 1000 * 10) / 10}`, width - 25, height - 10)
 
