@@ -12,15 +12,39 @@ const BLOCK_SPACING_RATIO = 0.5;
 // let blockPositionX = (i, size, halfSize, spacing, width) => (width / 2) - ((spacing + size) * i)
 let blockShowCount = (size, spacing, width) => Math.floor(width / (size + spacing)) + 2
 
+let roundNumber = (n, modifier = 0.01) => Math.round(n / modifier) * modifier
+let formatNumber = (n, afterPeriod = 2) => {
+  const str = String(n)
+  const period = str.indexOf('.')
+
+  if (period < 0) {
+    return str + '.00'
+  }
+
+  const dist = str.length - period - 1
+  if (dist < afterPeriod) {
+    return str + '0'.repeat(dist)
+  }
+
+  if (dist > afterPeriod) {
+    return str.substring(0, period + afterPeriod + 1)
+  }
+
+  return str
+}
+
 let shouldAddBlock = false;
 
 let resize = { t: 0, frames: FRAME_RATE * 0.5 }
 let getParent = () => select('#sketch')
 
 // Images
-let blockImage;
+let blockImage
+let fingerprint
+
 function preload() {
-  blockImage = loadImage('https://cdn4.iconfinder.com/data/icons/gaming-70/130/game-30-512.png')
+  fingerprint = loadImage('https://i.ibb.co/Z1x5ShQ/fingerprint.png');
+  blockImage = loadImage('https://i.ibb.co/vknxMwg/vicoin-block.png')
 }
 
 function setup() {
@@ -56,18 +80,6 @@ function draw() {
     resizeCanvas(parent.width, parent.height)
   }
 
-  // Add block event
-  if (shouldAddBlock) {
-    shouldAddBlock = false;
-    const newBlock = BLOCKCHAIN.generateNextBlock([])
-    BLOCKCHAIN.insertBlock(newBlock)
-
-    if (selectedBlock === BLOCKCHAIN.length - 2) {
-      selectedBlock += 1
-      blocksOffset += OFFSET_MAX * 2
-    }
-  }
-
   transactionManager()
   minersManager()
 
@@ -81,21 +93,68 @@ function draw() {
 const SIZE = 128
 const SIZE_HALF = SIZE / 2
 const SIZE_BIG = SIZE * 1.1
+const SIZE_BIG_HALF = SIZE_BIG / 2
 const SPACING = 64
 const OFFSET_MAX = SIZE_HALF + SPACING / 2
 const OFFSET_ANIMATION_DURATION = 300
 const OFFSET_ANIMATION_SPEED_MIN = 0.2
 
-let selectedBlock = 0;
-let blocksOffset = 0;
-let dragging = false;
+const FP_SIZE = 24
+const FP_SIZE_HALF = 12
+const FP2_OFFSET = -32
+const FP_LINK_CURVE_MODIFIER = 80
+
+let selectedBlock = 0
+let blocksOffset = 0
+let showMoreinfo = false
+let moreInfoGroup
+let goToBlockButtons = 0
+let showBlockInfo = false
 
 function setupBlockChain() {
+  const div = select('#block-buttons')
+  const inspect = document.getElementById('inspect-button')
+  const first = document.getElementById('first-button')
+  const last = document.getElementById('last-button')
+
+  div.position(width / 2 - div.width / 2, height * 0.8 + SIZE_HALF + 16)
+
+  inspect.onclick = () => {
+    showBlockInfo = true
+  }
+
+  first.onclick = () => {
+    goToBlockButtons = -1
+  }
+
+  last.onclick = () => {
+    goToBlockButtons = 1
+  }
+
+  moreInfoGroup = {div, first, inspect, last}
 }
 
 function drawBlockChain() {
+  const showCountHalf = Math.floor(blockShowCount(SIZE, SPACING, width) / 2)
+
+  // update more info group
+  moreInfoGroup.inspect.disabled = blocksOffset !== 0.0
+
+  moreInfoGroup.first.style.visibility = selectedBlock <= showCountHalf - 1 ? 'hidden' : 'visible'
+  moreInfoGroup.first.innerText = `< ${selectedBlock - showCountHalf + 1}`
+  moreInfoGroup.last.style.visibility = BLOCKCHAIN.length - selectedBlock <= showCountHalf ? 'hidden' : 'visible'
+  moreInfoGroup.last.innerText = `${BLOCKCHAIN.length - selectedBlock - showCountHalf} >`
+
+  if (goToBlockButtons > 0) {
+    selectedBlock = BLOCKCHAIN.length - 1
+    goToBlockButtons = 0
+  } else if (goToBlockButtons < 0) {
+    selectedBlock = 0
+    goToBlockButtons = 0
+  }
+
   // update offset
-  if (!dragging) {
+  if (!mouseDragging) {
     const offsetSpeed = Math.max(OFFSET_ANIMATION_SPEED_MIN, Math.abs(blocksOffset) / OFFSET_ANIMATION_DURATION)
     const offsetMovement = offsetSpeed * deltaTime * TIME_SPEED
 
@@ -106,32 +165,73 @@ function drawBlockChain() {
     }
   }
 
-  translate(width / 2 + blocksOffset, height * 0.8)
+  const tx = width / 2
+  const ty = height * 0.8
+  translate(tx + blocksOffset, ty)
 
-  const showCountHalf = Math.floor(blockShowCount(SIZE, SPACING, width) / 2)
   var minIndex = Math.max(0, selectedBlock - showCountHalf)
   var maxIndex = Math.min(BLOCKCHAIN.length - 1, selectedBlock + showCountHalf)
 
   var x = -(SIZE + SPACING) * (selectedBlock - minIndex);
   var y = 0;
 
+  var lfp2 = null
   for (var i = minIndex; i <= maxIndex; i += 1) {
 
+    const isSelected = i === selectedBlock
+    const size = isSelected ? SIZE_BIG : SIZE
+    const sizeHalf = isSelected ? SIZE_BIG / 2 : SIZE_HALF
+
+
     imageMode(CENTER)
+    tint(46, 204, 113)
+    image(blockImage, x, y, size, size)
 
-    if (i === BLOCKCHAIN.length - 1) {
-      noTint()
-    } else {
-      tint(200)
+    noTint()
+
+    const fp1 = {
+      x: x - sizeHalf + FP_SIZE_HALF,
+      y: y - sizeHalf + FP_SIZE_HALF
     }
 
-    let img
-    if (i === selectedBlock) {
-      img = image(blockImage, x, y, SIZE_BIG, SIZE_BIG)
-    } else {
-      img = image(blockImage, x, y, SIZE, SIZE)
+    const fp2 = {
+      x: x + sizeHalf + FP_SIZE_HALF + FP2_OFFSET,
+      y: y + sizeHalf + FP_SIZE_HALF + FP2_OFFSET
     }
 
+    image(fingerprint, fp1.x, fp1.y, FP_SIZE, FP_SIZE)
+    image(fingerprint, fp2.x, fp2.y, FP_SIZE, FP_SIZE)
+
+    if (lfp2) {
+      // line(lfp2.x, lfp2.y, fp1.x, fp1.y)
+      const m = {
+        x: lfp2.x + (fp1.x - lfp2.x) / 2,
+        y: lfp2.y + (fp1.y - lfp2.y) / 2,
+      }
+      noFill()
+      stroke(39, 174, 96)
+      strokeWeight(2)
+      bezier(
+        lfp2.x + FP_SIZE_HALF, lfp2.y,
+        lfp2.x + FP_LINK_CURVE_MODIFIER, lfp2.y,
+        fp1.x - FP_LINK_CURVE_MODIFIER, fp1.y,
+        fp1.x - FP_SIZE_HALF, fp1.y,
+      );
+    }
+
+
+    lfp2 = fp2
+
+    const trCount = BLOCKCHAIN.getBlock(i).data.length
+    const minerIndex = BLOCKCHAIN.getBlock(i).miner
+
+    fill(255)
+    textAlign('center')
+    text(`${trCount || 'No'} transaction${trCount === 1 ? '' : 's'}`, x - 4, -10)
+    if (minerIndex >= 0)
+      text(`Mined by ${MINERS[minerIndex].name}`, x - 4, 10)
+    else
+    text(`Genesis block`, x - 4, 10)
 
     x += SIZE + SPACING
   }
@@ -175,7 +275,7 @@ function drawWallets() {
     textAlign('right')
     text(info.name, x, y);
     textAlign('left')
-    text(Math.round(wallet.credits * 100) / 100 + ' VI', x + 25, y)
+    text(formatNumber(roundNumber(wallet.credits)) + ' VI', x + 25, y)
 
     y += 30
   }
@@ -226,7 +326,7 @@ function drawTransactions() {
 
   // Show when the next automatic action will be executed
   textAlign('right')
-  text(`next transaction in ${Math.floor(transactionCooldown / 1000 * 10) / 10}`, width - 25, height - 25)
+  text(`next transaction in ${formatNumber(transactionCooldown / 1000, 1)}`, width - 25, height - 25)
 
   let x = width - 25
   let y = 40
@@ -252,7 +352,7 @@ function drawTransactions() {
     fill(transaction._id_src === 0 || transaction._id_dest == 0 ? 'gold' : 'white')
 
     textAlign('right')
-    text(`${infoA.name} -> ${infoB.name}: ${transaction._montant} VI`, x, y)
+    text(`${infoA.name} -> ${infoB.name}: ${formatNumber(transaction._montant)} VI`, x, y)
 
     y += 30
   }
@@ -290,7 +390,7 @@ function transactionManager() {
 
 // MINERS
 const MINERS = [
-  {name: "Miner A", credits: 0.0},
+  {name: "My Miner", credits: 0.0},
   {name: "Miner B", credits: 0.0},
   {name: "Miner C", credits: 0.0},
   {name: "Miner D", credits: 0.0},
@@ -307,7 +407,7 @@ function setupMiners() {
   const div = select('#miner-form')
   const send = document.getElementById('miner-send')
 
-  div.position(width / 2 - div.width / 2, 0)
+  div.position(width / 2 - div.width / 2, height / 2 - 50)
 
   send.onclick = () => {
     userMined = true
@@ -332,19 +432,26 @@ function minersManager() {
 
     if (TRANSACTIONS.length > 0) {
       const transactionCount = Math.min(TRANSACTIONS.length, MAX_TRANSACTION_PER_BLOCK)
-
+      const trs = []
       // Mine a block
       for (var i = 0; i < transactionCount; i += 1) {
         let transaction = TRANSACTIONS.execute_first_transaction()
-        BLOCKCHAIN.latestBlock.data.push(transaction)
+        trs.push(transaction)
       }
 
-      shouldAddBlock = true
-
       // Chose miner to gain the fee.
-      var minerIndex = Math.floor(Math.random() * (MINERS.length - 1) + 1)
-      var miner = MINERS[userMined ? 0 : minerIndex]
+      var minerIndex = userMined ? 0 : Math.floor(Math.random() * (MINERS.length - 1) + 1)
+      var miner = MINERS[minerIndex]
       miner.credits += transactionCount * 0.01
+
+      // Add block
+      const newBlock = BLOCKCHAIN.generateNextBlock(trs, minerIndex)
+      BLOCKCHAIN.insertBlock(newBlock)
+
+      if (selectedBlock === BLOCKCHAIN.length - 2) {
+        selectedBlock += 1
+        blocksOffset += OFFSET_MAX * 2
+      }
     }
 
     minerCooldown = Math.floor(Math.random() * (MINER_COOLDOWN.max - MINER_COOLDOWN.min) + MINER_COOLDOWN.min)
@@ -360,7 +467,7 @@ function drawMiners() {
   mineForm.send.disabled = TRANSACTIONS.length === 0
 
   textAlign('right')
-  text(`next block mined in ${Math.floor(minerCooldown / 1000 * 10) / 10}`, width - 25, height - 10)
+  text(`next block mined in ${formatNumber(minerCooldown / 1000, 1)}`, width - 25, height - 10)
 
   let x = width / 2
   let y = 40
@@ -380,7 +487,7 @@ function drawMiners() {
     fill(i === 0 ? 'gold' : 'white')
 
     textAlign('center')
-    text(`${miner.name} ${credits} VI`, x, y)
+    text(`${miner.name} ${formatNumber(roundNumber(credits))} VI`, x, y)
 
     y += 30
   }
@@ -388,15 +495,22 @@ function drawMiners() {
 
 // P5 Events
 let mouseStartedOnBockchain = false
+let mouseStartPosition;
+let mouseDragging = false;
 
 function mousePressed() {
+  mouseStartPosition = {x: mouseX, y: mouseY}
+
   const targetY = height * 0.8
   mouseStartedOnBockchain = mouseY >= targetY - SIZE_HALF && mouseY <= targetY + SIZE_HALF
 }
 
 function mouseDragged({movementX}) {
-  if (mouseStartedOnBockchain &&  Math.abs(movementX) > 5) {
-    dragging = true
+  if (!mouseDragging && dist(mouseStartPosition.x, mouseStartPosition.y, mouseX, mouseY) > 5) {
+    mouseDragging = true
+  }
+
+  if (mouseDragging && mouseStartedOnBockchain) {
 
     blocksOffset += movementX;
 
@@ -426,11 +540,11 @@ function mouseDragged({movementX}) {
 }
 
 function mouseReleased() {
-  if (dragging) {
-    dragging = false
+  if (mouseDragging) {
+    mouseDragging = false
 
   } else if (mouseStartedOnBockchain) {
-    let offset = mouseX - width / 2
+    let offset = mouseX - width / 2 - blocksOffset
     const direction = offset < 0 ? -1 : 1
     offset *= direction
     offset += SIZE_HALF

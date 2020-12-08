@@ -17,11 +17,12 @@ class Block {
    * @param {Object} the data to include in the block
    * @param {String} the precalculated hash of the block
    */
-  constructor(id, previousHash, timestamp, data, hash) {
+  constructor(id, previousHash, timestamp, data, miner, hash) {
     this.id = id;
     this.previousHash = previousHash.toString();
     this.timestamp = timestamp;
     this.data = data;
+    this.miner = miner
     this.hash = hash;
   }
 
@@ -59,7 +60,7 @@ const BLOCKCHAIN = new class {
    * Initialises a new VIBlockchain with a genesis block
    */
   constructor() {
-    let genesisBlock = new Block(0, "0", Date.now(), [], "000");
+    let genesisBlock = new Block(0, "0", Date.now(), [], -1, "000");
 
     this._chain = [genesisBlock];
     this.difficulty = 2;
@@ -70,11 +71,11 @@ const BLOCKCHAIN = new class {
    * @param {Object} The object containing all the transactions to include in the block
    * @returns {Block} The new block to add at the end of the chain.
    */
-  generateNextBlock(transactions) {
+  generateNextBlock(transactions, miner) {
     let previousBlock = this.latestBlock;
     let nextIndex = previousBlock.id + 1;
     let nextTimestamp = Date.now(); // Because Date.now() returns a the time in milliseconds
-    let block = new Block(nextIndex, previousBlock.hash, nextTimestamp, transactions, "");
+    let block = new Block(nextIndex, previousBlock.hash, nextTimestamp, transactions, miner, "");
     block.setHash(Block.calculateBlockHash(block, this.difficulty));
 
     return block;
