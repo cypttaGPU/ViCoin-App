@@ -43,8 +43,6 @@ let blockImage
 let fingerprint
 
 function preload() {
-  // fingerprint = loadImage('https://i.ibb.co/Z1x5ShQ/fingerprint.png')
-  // blockImage = loadImage('https://i.ibb.co/vknxMwg/vicoin-block.png')
   fingerprint = loadImage('assets/fingerprint.png')
   blockImage = loadImage('assets/vicoin-block.png')
 }
@@ -109,12 +107,52 @@ const FP_LINK_CURVE_MODIFIER = 80
 let selectedBlock = 0
 let blocksOffset = 0
 let showMoreinfo = false
-let moreInfoGroup
-let goToBlockButtons = 0
 let showBlockInfo = false
+let goToBlockButtons = 0
+let blockChainButtons
+let blockInfo
+let blockInvalidated = false;
+let blockDataToString = (data) => {
+  var str = ""
+  data.forEach((tr, i) => {
+    if (i > 0) str += '\n'
+    str += `sent ${formatNumber(tr._montant)} VI from #${tr._id_src} to #${tr._id_dest}`
+  });
+  return str
+}
+let resetBlockInfo = (block) => {
+  blockInfo.trs.value = blockDataToString(block.data)
+  blockInvalidated = false
+}
 
 function setupBlockChain() {
-  const div = select('#block-buttons')
+  // Blockchain info
+  let mask = select('#block-info-mask')
+  let div = select('#block-info')
+  let reset = document.getElementById('block-info-reset')
+  let close = document.getElementById('block-info-close')
+  let trs = document.getElementById('block-info-transactions')
+
+  div.size(div.width, height * 0.8 - SIZE_BIG_HALF - SPACING)
+
+  reset.onclick = () => resetBlockInfo(BLOCKCHAIN.getBlock(selectedBlock))
+
+  close.onclick = () => {
+    showBlockInfo = false;
+    blockInfo.mask.addClass('hidden')
+    TIME_SPEED = 1.0
+    trs.innerText = '';
+  }
+
+  trs.oninput = () => {
+    const block = BLOCKCHAIN.getBlock(selectedBlock)
+    blockInvalidated = blockDataToString(block.data) !== trs.value
+  }
+
+  blockInfo = {mask, div, reset, close, trs}
+
+  // Block chainbuttons
+  div = select('#block-buttons')
   const inspect = document.getElementById('inspect-button')
   const first = document.getElementById('first-button')
   const last = document.getElementById('last-button')
@@ -122,7 +160,12 @@ function setupBlockChain() {
   div.position(width / 2 - div.width / 2, height * 0.8 + SIZE_HALF + 16)
 
   inspect.onclick = () => {
-    showBlockInfo = true
+    showBlockInfo = true;
+    blockInfo.mask.removeClass('hidden')
+    TIME_SPEED = 0.0
+
+    const block = BLOCKCHAIN.getBlock(selectedBlock)
+    resetBlockInfo(block)
   }
 
   first.onclick = () => {
@@ -133,19 +176,26 @@ function setupBlockChain() {
     goToBlockButtons = 1
   }
 
-  moreInfoGroup = {div, first, inspect, last}
+  blockChainButtons = {div, first, inspect, last}
 }
 
 function drawBlockChain() {
   const showCountHalf = Math.floor(blockShowCount(SIZE, SPACING, width) / 2)
 
-  // update more info group
-  moreInfoGroup.inspect.disabled = blocksOffset !== 0.0
+  // update blockchain info
+  blockInfo.reset.disabled = !blockInvalidated
+  blockInfo.close.disabled = blockInvalidated
 
-  moreInfoGroup.first.style.visibility = selectedBlock <= showCountHalf - 1 ? 'hidden' : 'visible'
-  moreInfoGroup.first.innerText = `< ${selectedBlock - showCountHalf + 1}`
-  moreInfoGroup.last.style.visibility = BLOCKCHAIN.length - selectedBlock <= showCountHalf ? 'hidden' : 'visible'
-  moreInfoGroup.last.innerText = `${BLOCKCHAIN.length - selectedBlock - showCountHalf} >`
+  // update blockchain buttons
+  blockChainButtons.inspect.disabled = blocksOffset !== 0.0 || showBlockInfo
+
+  blockChainButtons.first.style.visibility = selectedBlock <= showCountHalf - 1 ? 'hidden' : 'visible'
+  blockChainButtons.first.disabled = showBlockInfo
+  blockChainButtons.first.innerText = `< ${selectedBlock - showCountHalf + 1}`
+
+  blockChainButtons.last.style.visibility = BLOCKCHAIN.length - selectedBlock <= showCountHalf ? 'hidden' : 'visible'
+  blockChainButtons.last.disabled = showBlockInfo
+  blockChainButtons.last.innerText = `${BLOCKCHAIN.length - selectedBlock - showCountHalf} >`
 
   if (goToBlockButtons > 0) {
     selectedBlock = BLOCKCHAIN.length - 1
@@ -186,7 +236,7 @@ function drawBlockChain() {
 
 
     imageMode(CENTER)
-    tint(46, 204, 113)
+    showBlockInfo && blockInvalidated && i >= selectedBlock ? tint(192, 57, 43) : tint(46, 204, 113)
     image(blockImage, x, y, size, size)
 
     noTint()
@@ -211,7 +261,7 @@ function drawBlockChain() {
         y: lfp2.y + (fp1.y - lfp2.y) / 2,
       }
       noFill()
-      stroke(39, 174, 96)
+      showBlockInfo && blockInvalidated && i > selectedBlock ? stroke(192, 57, 43) : stroke(46, 204, 113)
       strokeWeight(2)
       bezier(
         lfp2.x + FP_SIZE_HALF, lfp2.y,
@@ -228,6 +278,7 @@ function drawBlockChain() {
     const minerIndex = BLOCKCHAIN.getBlock(i).miner
 
     fill(255)
+    noStroke()
     textAlign('center')
     text(`${trCount || 'No'} transaction${trCount === 1 ? '' : 's'}`, x - 4, -10)
     if (minerIndex >= 0)
@@ -501,6 +552,8 @@ let mouseStartPosition;
 let mouseDragging = false;
 
 function mousePressed() {
+  if (showBlockInfo) return;
+
   mouseStartPosition = {x: mouseX, y: mouseY}
 
   const targetY = height * 0.8
@@ -508,6 +561,8 @@ function mousePressed() {
 }
 
 function mouseDragged({movementX}) {
+  if (showBlockInfo) return;
+
   if (!mouseDragging && dist(mouseStartPosition.x, mouseStartPosition.y, mouseX, mouseY) > 5) {
     mouseDragging = true
   }
@@ -542,6 +597,8 @@ function mouseDragged({movementX}) {
 }
 
 function mouseReleased() {
+  if (showBlockInfo) return;
+
   if (mouseDragging) {
     mouseDragging = false
 

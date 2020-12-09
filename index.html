@@ -38,8 +38,22 @@
     <button id="last-button" style="width: 100px;">&gt;</button>
   </div>
 
-  <div id="">
-
+  <div id="block-info-mask" class="group hidden">
+    <div id="block-info">
+      <div>
+        <div id="block-info-header">
+          <h1>Transactions</h1>
+          <div>
+            <button id="block-info-reset">RESET</button>
+            <button id="block-info-close">CLOSE</button>
+          </div>
+        </div>
+        <div id="block-info-transactions-div">
+          <textarea id="block-info-transactions"></textarea>
+        </div>
+      </div>
+    </div>
+    <div id="block-info-bottom"></div>
   </div>
 
   <script src="js/p5/sketch.js"></script>
