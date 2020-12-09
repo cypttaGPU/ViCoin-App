@@ -117,7 +117,7 @@ let blockDataToString = (data) => {
   var str = ""
   data.forEach((tr, i) => {
     if (i > 0) str += '\n'
-    str += `sent ${formatNumber(tr._montant)} VI from #${tr._id_src} to #${tr._id_dest}`
+    str += `sent ${formatNumber(tr._montant)} VI from #${tr._id_src} (${WALLET_INFO[tr._id_src].name}) to #${tr._id_dest} (${WALLET_INFO[tr._id_dest].name})`
   });
   return str
 }
