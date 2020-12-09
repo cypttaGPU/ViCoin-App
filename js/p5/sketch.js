@@ -43,8 +43,10 @@ let blockImage
 let fingerprint
 
 function preload() {
-  fingerprint = loadImage('https://i.ibb.co/Z1x5ShQ/fingerprint.png');
-  blockImage = loadImage('https://i.ibb.co/vknxMwg/vicoin-block.png')
+  // fingerprint = loadImage('https://i.ibb.co/Z1x5ShQ/fingerprint.png')
+  // blockImage = loadImage('https://i.ibb.co/vknxMwg/vicoin-block.png')
+  fingerprint = loadImage('assets/fingerprint.png')
+  blockImage = loadImage('assets/vicoin-block.png')
 }
 
 function setup() {
