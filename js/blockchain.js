@@ -5,7 +5,6 @@
  * @author Jérôme Chételat
  */
 
-
 /**
  * The class to describe a Block in the blockchain
  */
@@ -41,12 +40,8 @@ class Block {
    * @return {String} the hash of the given block
    */
   static calculateBlockHash(block, difficulty) {
-    let end = "";
-
-    for(let i = 0; i < difficulty; i++)
-      end += "0";
-
-    return block.id.toString() + end;
+    const chars = '0123456789ABCDEF';
+    return [...Array(32)].map(() => chars.charAt(Math.floor(Math.random() * 15))).join('')
   }
 }
 
@@ -60,7 +55,7 @@ const BLOCKCHAIN = new class {
    * Initialises a new VIBlockchain with a genesis block
    */
   constructor() {
-    let genesisBlock = new Block(0, "0", Date.now(), [], -1, "000");
+    let genesisBlock = new Block(0, "", Date.now(), [], -1, Block.calculateBlockHash());
 
     this._chain = [genesisBlock];
     this.difficulty = 2;
@@ -150,8 +145,8 @@ const BLOCKCHAIN = new class {
     if (previousBlock.hash !== newBlock.previousHash)
       return false;
 
-    if (Block.calculateBlockHash(newBlock, this.difficulty) !== newBlock.hash)
-      return false;
+    // if (Block.calculateBlockHash(newBlock, this.difficulty) !== newBlock.hash)
+    //   return false;
 
     return true;
   }

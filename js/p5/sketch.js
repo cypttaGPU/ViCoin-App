@@ -111,6 +111,7 @@ let showBlockInfo = false
 let goToBlockButtons = 0
 let blockChainButtons
 let blockInfo
+let randomHash = ''
 let blockInvalidated = false;
 let blockDataToString = (data) => {
   var str = ""
@@ -121,7 +122,18 @@ let blockDataToString = (data) => {
   return str
 }
 let resetBlockInfo = (block) => {
-  blockInfo.trs.value = blockDataToString(block.data)
+  const {title, pHash, cHash, trs, miner} = blockInfo
+
+  title.innerText = block.id ? `Block #${block.id}` : 'GenesisBlock'
+
+  pHash.innerText = block.previousHash || 'None'
+
+  cHash.innerText = block.hash
+
+  trs.value = blockDataToString(block.data)
+
+  miner.innerText = block.miner >= 0 ? `#${block.miner} (${MINERS[block.miner].name})` : `None`
+
   blockInvalidated = false
 }
 
@@ -131,7 +143,11 @@ function setupBlockChain() {
   let div = select('#block-info')
   let reset = document.getElementById('block-info-reset')
   let close = document.getElementById('block-info-close')
+  let title = document.getElementById('block-info-title')
+  let pHash = document.getElementById('block-info-previous-hash')
+  let cHash = document.getElementById('block-info-current-hash')
   let trs = document.getElementById('block-info-transactions')
+  let miner = document.getElementById('block-info-miner')
 
   div.size(div.width, height * 0.8 - SIZE_BIG_HALF - SPACING)
 
@@ -147,9 +163,10 @@ function setupBlockChain() {
   trs.oninput = () => {
     const block = BLOCKCHAIN.getBlock(selectedBlock)
     blockInvalidated = blockDataToString(block.data) !== trs.value
+    if (blockInvalidated) randomHash = Block.calculateBlockHash()
   }
 
-  blockInfo = {mask, div, reset, close, trs}
+  blockInfo = {mask, div, reset, close, title, pHash, cHash, trs, miner}
 
   // Block chainbuttons
   div = select('#block-buttons')
@@ -185,30 +202,33 @@ function drawBlockChain() {
   // update blockchain info
   blockInfo.reset.disabled = !blockInvalidated
   blockInfo.close.disabled = blockInvalidated
+  blockInfo.cHash.innerText = blockInvalidated ? randomHash : BLOCKCHAIN.getBlock(selectedBlock).hash
 
   // update blockchain buttons
   blockChainButtons.inspect.disabled = blocksOffset !== 0.0 || showBlockInfo
 
+  blockChainButtons.first.disabled = blockInvalidated
   blockChainButtons.first.style.visibility = selectedBlock <= showCountHalf - 1 ? 'hidden' : 'visible'
-  blockChainButtons.first.disabled = showBlockInfo
   blockChainButtons.first.innerText = `< ${selectedBlock - showCountHalf + 1}`
 
+  blockChainButtons.last.disabled = blockInvalidated
   blockChainButtons.last.style.visibility = BLOCKCHAIN.length - selectedBlock <= showCountHalf ? 'hidden' : 'visible'
-  blockChainButtons.last.disabled = showBlockInfo
   blockChainButtons.last.innerText = `${BLOCKCHAIN.length - selectedBlock - showCountHalf} >`
 
   if (goToBlockButtons > 0) {
     selectedBlock = BLOCKCHAIN.length - 1
+    resetBlockInfo(BLOCKCHAIN.getBlock(selectedBlock))
     goToBlockButtons = 0
   } else if (goToBlockButtons < 0) {
     selectedBlock = 0
+    resetBlockInfo(BLOCKCHAIN.getBlock(selectedBlock))
     goToBlockButtons = 0
   }
 
   // update offset
   if (!mouseDragging) {
     const offsetSpeed = Math.max(OFFSET_ANIMATION_SPEED_MIN, Math.abs(blocksOffset) / OFFSET_ANIMATION_DURATION)
-    const offsetMovement = offsetSpeed * deltaTime * TIME_SPEED
+    const offsetMovement = offsetSpeed * deltaTime
 
     if (Math.abs(blocksOffset) < offsetMovement) {
       blocksOffset = 0
@@ -503,6 +523,7 @@ function minersManager() {
 
       if (selectedBlock === BLOCKCHAIN.length - 2) {
         selectedBlock += 1
+        resetBlockInfo(BLOCKCHAIN.getBlock(selectedBlock))
         blocksOffset += OFFSET_MAX * 2
       }
     }
@@ -552,7 +573,7 @@ let mouseStartPosition;
 let mouseDragging = false;
 
 function mousePressed() {
-  if (showBlockInfo) return;
+  if (blockInvalidated) return;
 
   mouseStartPosition = {x: mouseX, y: mouseY}
 
@@ -561,7 +582,7 @@ function mousePressed() {
 }
 
 function mouseDragged({movementX}) {
-  if (showBlockInfo) return;
+  if (blockInvalidated) return;
 
   if (!mouseDragging && dist(mouseStartPosition.x, mouseStartPosition.y, mouseX, mouseY) > 5) {
     mouseDragging = true
@@ -592,12 +613,13 @@ function mouseDragged({movementX}) {
     }
 
     selectedBlock = Math.max(0, Math.min(selectedBlock, BLOCKCHAIN.length - 1))
+    resetBlockInfo(BLOCKCHAIN.getBlock(selectedBlock))
     blocksOffset = blocksOffset
   }
 }
 
 function mouseReleased() {
-  if (showBlockInfo) return;
+  if (blockInvalidated) return;
 
   if (mouseDragging) {
     mouseDragging = false
@@ -613,6 +635,7 @@ function mouseReleased() {
     const index = selectedBlock + indexOffset
     if (index >= 0 && index < BLOCKCHAIN.length && offset % blockSpace < SIZE) {
       selectedBlock += indexOffset
+      resetBlockInfo(BLOCKCHAIN.getBlock(selectedBlock))
       blocksOffset += indexOffset * OFFSET_MAX * 2
     }
   }

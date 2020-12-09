@@ -42,14 +42,31 @@
     <div id="block-info">
       <div>
         <div id="block-info-header">
-          <h1>Transactions</h1>
+          <h1 id="block-info-title"></h1>
           <div>
             <button id="block-info-reset">RESET</button>
             <button id="block-info-close">CLOSE</button>
           </div>
         </div>
-        <div id="block-info-transactions-div">
+
+        <div class="block-info-group">
+          <div>Previous hash:</div>
+          <div id="block-info-previous-hash"></div>
+        </div>
+
+        <div id="block-info-transactions-div" class="block-info-group">
+          <div>Transactions:</div>
           <textarea id="block-info-transactions"></textarea>
+        </div>
+
+        <div class="block-info-group">
+          <div>Miner:</div>
+          <div id="block-info-miner"></div>
+        </div>
+
+        <div class="block-info-group">
+          <div>Current Hash:</div>
+          <div id="block-info-current-hash" class="code"></div>
         </div>
       </div>
     </div>

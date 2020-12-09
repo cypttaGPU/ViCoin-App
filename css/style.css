@@ -27,6 +27,10 @@ input, select, button {
   margin: 2px 4px;
 }
 
+.hidden {
+  visibility: hidden;
+}
+
 #block-info-mask {
   position: fixed;
   left: 20%;
@@ -70,6 +74,7 @@ input, select, button {
 #block-info-transactions-div {
   width: auto;
 }
+
 #block-info-transactions {
   margin-left: 10%;
   width: 80%;
@@ -77,6 +82,19 @@ input, select, button {
   resize: vertical;
 }
 
-.hidden {
-  visibility: hidden;
+.block-info-group {
+  margin-bottom: 16px;
+}
+
+.block-info-group > div:first-child {
+  font-weight: 600;
+}
+
+.block-info-group > div:last-child {
+  margin-left: 16px;
+}
+
+.code {
+  font-family: 'Courier New', Courier, monospace;
+  word-wrap: break-word;
 }
