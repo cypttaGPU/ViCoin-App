@@ -122,11 +122,13 @@ let blockDataToString = (data) => {
   return str
 }
 let resetBlockInfo = (block) => {
-  const {title, pHash, cHash, trs, miner} = blockInfo
+  const {title, pHash, vHash, cHash, trs, miner} = blockInfo
 
   title.innerText = block.id ? `Block #${block.id}` : 'GenesisBlock'
 
   pHash.innerText = block.previousHash || 'None'
+
+  vHash.innerText = block.hash
 
   cHash.innerText = block.hash
 
@@ -145,6 +147,7 @@ function setupBlockChain() {
   let close = document.getElementById('block-info-close')
   let title = document.getElementById('block-info-title')
   let pHash = document.getElementById('block-info-previous-hash')
+  let vHash = document.getElementById('block-info-valid-hash')
   let cHash = document.getElementById('block-info-current-hash')
   let trs = document.getElementById('block-info-transactions')
   let miner = document.getElementById('block-info-miner')
@@ -166,7 +169,7 @@ function setupBlockChain() {
     if (blockInvalidated) randomHash = Block.calculateBlockHash()
   }
 
-  blockInfo = {mask, div, reset, close, title, pHash, cHash, trs, miner}
+  blockInfo = {mask, div, reset, close, title, pHash, vHash, cHash, trs, miner}
 
   // Block chainbuttons
   div = select('#block-buttons')
