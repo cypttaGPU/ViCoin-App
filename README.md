@@ -33,7 +33,7 @@ Il se trouve que deux de nos membres connaissaient les monnaies virtuelles et qu
 
 # Utilisation du programme
 Le programme est disponible en ligne avec le lien: <a href="https://cypttagpu.github.io/ViCoin-App/">https://cypttagpu.github.io/ViCoin-App/</a>.
-L'utilisation est très simple: "Cliquez sur les boutons pour afficher des détails". Ce n'est pas plus compliqué.
+L'utilisation est très simple: "Cliquez sur les boutons pour visualiser ou altérer des données". Ce n'est pas plus compliqué.
 
 # Problématique de départ
 Notre problématique de départ est: `Comment fonctionne une blockchain et comment peut-on interagir avec elle ?`
