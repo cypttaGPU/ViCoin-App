@@ -22,15 +22,16 @@
 <body>
   <div id="sketch"></div>
 
-  <div id="transaction-form" class="group">
-    <input id="transaction-amount" type="number"  value="6.0"/>
-    <select id="transaction-to"></select>
-    <button id="transaction-send">SEND</button>
-    <!-- <input id="transaction-mining-fee" type="number" value="0.0"> -->
-  </div>
+  <div id="interaction-menu">
+    <div id="transaction-form" class="group">
+      <input id="transaction-amount" type="number"  value="6.0"/>
+      <select id="transaction-to"></select>
+      <button id="transaction-send">SEND</button>
+    </div>
 
-  <div id="miner-form" class="group">
-    <button id="miner-send">MINE</button>
+    <div id="miner-form" class="group">
+      <button id="miner-send">MINE BLOCK</button>
+    </div>
   </div>
 
   <div id="block-buttons" class="group" style="justify-content: space-between; width: 100%;">
@@ -50,11 +51,6 @@
           </div>
         </div>
 
-        <div class="block-info-group">
-          <div>Previous hash:</div>
-          <div id="block-info-previous-hash"></div>
-        </div>
-
         <div id="block-info-transactions-div" class="block-info-group">
           <div>Transactions:</div>
           <textarea id="block-info-transactions"></textarea>
@@ -63,6 +59,11 @@
         <div class="block-info-group">
           <div>Miner:</div>
           <div id="block-info-miner"></div>
+        </div>
+
+        <div class="block-info-group">
+          <div>Previous hash:</div>
+          <div id="block-info-previous-hash" class="code"></div>
         </div>
 
         <div class="block-info-group">

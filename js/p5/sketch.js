@@ -127,7 +127,7 @@ let blockDataToString = (data) => {
 let resetBlockInfo = (block) => {
   const {title, pHash, vHash, cHash, trs, miner} = blockInfo
 
-  title.innerText = block.id ? `Block #${block.id}` : 'GenesisBlock'
+  title.innerText = block.id ? `Block #${block.id}` : 'Genesis Block'
 
   pHash.innerText = block.previousHash || 'None'
 
@@ -391,7 +391,7 @@ function setupTransactions() {
   const to = document.getElementById('transaction-to');
   const send = document.getElementById('transaction-send');
 
-  div.position(width / 2 - div.width / 2, height / 2 - div.height / 2)
+  // div.position(width / 2 - div.width / 2, height / 2 - div.height / 2)
 
   for (var i = 1; i < WALLET_COUNT; i += 1) {
     const option = document.createElement('OPTION')
@@ -491,7 +491,7 @@ function transactionManager() {
 
     TRANSACTIONS.transact(walletA, walletB, amount)
     transactionCooldown = Math.floor(Math.random() * (TRANSACTION_COOLDOWN.max - TRANSACTION_COOLDOWN.min) + TRANSACTION_COOLDOWN.min)
-    
+
     wallet_graph_data[0]['x'][walletIdA] -= amount;
     wallet_graph_data[0]['x'][walletIdB] += amount;
     wallet_graph_data[0]['text'][walletIdA] = walletA.credits;
@@ -519,7 +519,7 @@ function setupMiners() {
   const div = select('#miner-form')
   const send = document.getElementById('miner-send')
 
-  div.position(width / 2 - div.width / 2, height / 2 - 50)
+  // div.position(width / 2 - div.width / 2, height / 2 - 50)
 
   send.onclick = () => {
     userMined = true

@@ -37,6 +37,7 @@ input, select, button {
   width: 60%;
   background-color: rgba(240, 240, 240);
   box-shadow: 0px 4px 16px rgba(40, 40, 40, 0.6);
+  z-index: 10;
 }
 
 #block-info {
@@ -97,4 +98,20 @@ input, select, button {
 .code {
   font-family: 'Courier New', Courier, monospace;
   word-wrap: break-word;
+}
+
+#interaction-menu {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#miner-send {
+  width: 120px;
 }
