@@ -386,7 +386,7 @@ function setupTransactions() {
   const to = document.getElementById('transaction-to');
   const send = document.getElementById('transaction-send');
 
-  div.position(width / 2 - div.width / 2, height / 2 - div.height / 2)
+  // div.position(width / 2 - div.width / 2, height / 2 - div.height / 2)
 
   for (var i = 1; i < WALLET_COUNT; i += 1) {
     const option = document.createElement('OPTION')
@@ -510,7 +510,7 @@ function setupMiners() {
   const div = select('#miner-form')
   const send = document.getElementById('miner-send')
 
-  div.position(width / 2 - div.width / 2, height / 2 - 50)
+  // div.position(width / 2 - div.width / 2, height / 2 - 50)
 
   send.onclick = () => {
     userMined = true
