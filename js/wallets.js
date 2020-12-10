@@ -42,6 +42,10 @@ const WALLETS = new class {
         return this._dictWallet[id] || null;
     }
 
+    get amounts() {
+        return Object.keys(this._dictWallet).map(k => this._dictWallet[k].credits);
+    }
+
     // transfert_credit(id_src, id_dest, montant) {
     //     if(this._dictWallet[id_src].removeCredit(montant)) {
     //         this._dictWallet[id_dest].addCredit(montant);

@@ -79,6 +79,9 @@ function draw() {
     resize.t = 0;
     let parent = getParent()
     resizeCanvas(parent.width, parent.height)
+    wallet_graph_layout.width = parent.width * .176;
+    wallet_graph_layout.height = parent.height * .25;
+    Plotly.relayout(walletGraph.elt, wallet_graph_layout);
   }
 
   transactionManager()
@@ -324,22 +327,13 @@ const WALLET_INFO = [
 ]
 const WALLET_COUNT = WALLET_INFO.length;
 let walletGraph;
-let wallet_graph_data = [
-  {
-    x: WALLET_INFO.map(wallet => wallet.startingCoins),
-    y: WALLET_INFO.map(wallet => wallet.name),
-    xaxis: 'VI amount',
-    name: 'Wallets',
-    type: 'bar',
-    orientation: 'h'
-  }
-];
+let wallet_graph_data = [];
 let wallet_graph_layout = {
   title: "Wallets",
   width: 330,
   height: 200,
-  paper_bgcolor: "#505050",
-  plot_bgcolor: "#505050",
+  paper_bgcolor: "rgba(0, 0, 0, 0)",
+  plot_bgcolor: "rgba(0, 0, 0, 0)",
   font: {
     color: "#ffffff",
   },
@@ -354,7 +348,7 @@ let wallet_graph_layout = {
     // type: 'log',
     autorange: true,
     gridcolor: "#ffffff",
-    name : "ViCoin amount",
+    title : "ViCoin amount",
   },
   yaxis: {
     gridcolor: "#ffffff",
@@ -370,12 +364,23 @@ function setupWallets() {
   // Create a new div to draw the bar graph
   walletGraph.id('wallet_graph');
   walletGraph.position(40, 40);
+  let walletAmounts = WALLETS.amounts;
+  wallet_graph_data.push({
+    x: walletAmounts,
+    y: WALLET_INFO.map(w => w.name),
+    xaxis: 'VI amount',
+    name: 'Wallets',  
+    text: walletAmounts,
+    textposition: "auto",
+    type: 'bar',
+    orientation: 'h'
+  });
   Plotly.newPlot('wallet_graph', wallet_graph_data, wallet_graph_layout);
 }
 
 // TRANSACTIONS
 const TRANSACTIONS_AMOUNT_MIN = 6.0
-const TRANSACTION_COOLDOWN = { min: 5000, max: 10000 }
+const TRANSACTION_COOLDOWN = { min: 3000, max: 8000 }
 let transactionCooldown = TRANSACTION_COOLDOWN.min;
 let transactionForm;
 let toSend = null;
@@ -464,6 +469,8 @@ function transactionManager() {
 
       wallet_graph_data[0]['x'][0] -= amount;
       wallet_graph_data[0]['x'][to] += amount;
+      wallet_graph_data[0]['text'][0] = walletA.credits;
+      wallet_graph_data[0]['text'][to] = walletB.credits;
       Plotly.update(walletGraph.elt, wallet_graph_data, wallet_graph_layout);
     }
 
@@ -487,6 +494,8 @@ function transactionManager() {
     
     wallet_graph_data[0]['x'][walletIdA] -= amount;
     wallet_graph_data[0]['x'][walletIdB] += amount;
+    wallet_graph_data[0]['text'][walletIdA] = walletA.credits;
+    wallet_graph_data[0]['text'][walletIdB] = walletB.credits;
     Plotly.update(walletGraph.elt, wallet_graph_data, wallet_graph_layout);
   }
 }
@@ -538,6 +547,7 @@ function minersManager() {
       // Mine a block
       for (var i = 0; i < transactionCount; i += 1) {
         let transaction = TRANSACTIONS.execute_first_transaction()
+        wallet_graph_data[0]['text'][transaction._id_dest] = +wallet_graph_data[0]['text'][transaction._id_dest] + Math.round(transaction._montant);
         trs.push(transaction)
       }
 
