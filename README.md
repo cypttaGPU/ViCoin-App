@@ -11,7 +11,7 @@ Notre programme répondra donc aux questions :
 - Est-ce que cette monnaie est falsifiable ?
 - Comment fonctionne une blockchain ?
 - Quels sont les liens entre les différents blocs ?
-- Comment se visualiser simplement une blockchain ?
+- Comment visualiser simplement une blockchain ?
 
 De plus, afin de répondre aux exigences du cours, notre programme contient également :
 - Un concept intéressant
@@ -26,10 +26,9 @@ De plus, afin de répondre aux exigences du cours, notre programme contient éga
     - notre public cible
 - Quelles informations avons-nous utilisées afin de réaliser ce projet (références) ?
     - <a href="https://bitcoin.org/bitcoin.pdf">https://bitcoin.org/bitcoin.pdf</a>, que nous avons simplifié
-- Volume de travail
 
 # Motivation
-Il se trouve que deux de nos membres connaissaient les monnaies virtuelles et que l'un d'eux les utilise fréquemment. Notre désir était tout d'abord d'apprendre à notre collègue le fonctionnement derrière cette monnaie et réussir à créer une visualisation qui permettra à d'autres personnes externes d'y parvenir également.
+Il se trouve que deux de nos membres connaissaient les monnaies virtuelles et que l'un d'eux les utilisent fréquemment. Notre désir était tout d'abord d'apprendre à notre collègue le fonctionnement derrière ce type de monnaie et réussir à créer une visualisation qui permettra à d'autres personnes externes d'y parvenir également.
 
 # Utilisation du programme
 Le programme est disponible en ligne avec le lien: <a href="https://cypttagpu.github.io/ViCoin-App/">https://cypttagpu.github.io/ViCoin-App/</a>.
