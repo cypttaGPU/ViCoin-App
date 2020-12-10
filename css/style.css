@@ -37,6 +37,7 @@ input, select, button {
   width: 60%;
   background-color: rgba(240, 240, 240);
   box-shadow: 0px 4px 16px rgba(40, 40, 40, 0.6);
+  z-index: 10;
 }
 
 #block-info {

@@ -1,4 +1,4 @@
-const FRAME_RATE = 30;
+const FRAME_RATE = 60;
 let TIME_SPEED = 1.0;
 
 // Block Chain constants
@@ -34,9 +34,10 @@ let formatNumber = (n, afterPeriod = 2) => {
 }
 
 let shouldAddBlock = false;
-
-let resize = { t: 0, frames: FRAME_RATE * 0.5 }
+let resize = { t: 0, frames: FRAME_RATE * 0.5 };
 let getParent = () => select('#sketch')
+
+
 
 // Images
 let blockImage
@@ -84,7 +85,6 @@ function draw() {
   minersManager()
 
   subdraw(drawBlockChain)
-  subdraw(drawWallets)
   subdraw(drawTransactions)
   subdraw(drawMiners)
 }
@@ -122,11 +122,13 @@ let blockDataToString = (data) => {
   return str
 }
 let resetBlockInfo = (block) => {
-  const {title, pHash, cHash, trs, miner} = blockInfo
+  const {title, pHash, vHash, cHash, trs, miner} = blockInfo
 
   title.innerText = block.id ? `Block #${block.id}` : 'GenesisBlock'
 
   pHash.innerText = block.previousHash || 'None'
+
+  vHash.innerText = block.hash
 
   cHash.innerText = block.hash
 
@@ -145,6 +147,7 @@ function setupBlockChain() {
   let close = document.getElementById('block-info-close')
   let title = document.getElementById('block-info-title')
   let pHash = document.getElementById('block-info-previous-hash')
+  let vHash = document.getElementById('block-info-valid-hash')
   let cHash = document.getElementById('block-info-current-hash')
   let trs = document.getElementById('block-info-transactions')
   let miner = document.getElementById('block-info-miner')
@@ -166,7 +169,7 @@ function setupBlockChain() {
     if (blockInvalidated) randomHash = Block.calculateBlockHash()
   }
 
-  blockInfo = {mask, div, reset, close, title, pHash, cHash, trs, miner}
+  blockInfo = {mask, div, reset, close, title, pHash, vHash, cHash, trs, miner}
 
   // Block chainbuttons
   div = select('#block-buttons')
@@ -320,38 +323,54 @@ const WALLET_INFO = [
   {name: "Jack", startingCoins: 1500},
 ]
 const WALLET_COUNT = WALLET_INFO.length;
-
+let walletGraph;
+let wallet_graph_data = [
+  {
+    x: WALLET_INFO.map(wallet => wallet.startingCoins),
+    y: WALLET_INFO.map(wallet => wallet.name),
+    xaxis: 'VI amount',
+    name: 'Wallets',
+    type: 'bar',
+    orientation: 'h'
+  }
+];
+let wallet_graph_layout = {
+  title: "Wallets",
+  width: 330,
+  height: 200,
+  paper_bgcolor: "#505050",
+  plot_bgcolor: "#505050",
+  font: {
+    color: "#ffffff",
+  },
+  margin: {
+    t: 40,
+    l: 50,
+    r: 0,
+    b: 40,
+    pad: 5
+  },
+  xaxis: {
+    // type: 'log',
+    autorange: true,
+    gridcolor: "#ffffff",
+    name : "ViCoin amount",
+  },
+  yaxis: {
+    gridcolor: "#ffffff",
+    categoryorder: "total ascending",
+  }
+};
 function setupWallets() {
   for (var i = 0; i < WALLET_COUNT; i += 1) {
     WALLETS.makeWallet(WALLET_INFO[i].startingCoins);
   }
-}
+  walletGraph = createDiv();
 
-function drawWallets() {
-  let x = 25
-  let y = 40
-
-  fill('white')
-  textSize(20)
-  text("Wallets", x, y)
-
-  x += 50
-  y += 30
-
-  textSize(14)
-  for (var i = 0; i < WALLET_COUNT; i += 1) {
-    const wallet = WALLETS.get(i);
-    const info = WALLET_INFO[i];
-
-    fill(i === 0 ? 'gold' : 'white')
-
-    textAlign('right')
-    text(info.name, x, y);
-    textAlign('left')
-    text(formatNumber(roundNumber(wallet.credits)) + ' VI', x + 25, y)
-
-    y += 30
-  }
+  // Create a new div to draw the bar graph
+  walletGraph.id('wallet_graph');
+  walletGraph.position(40, 40);
+  Plotly.newPlot('wallet_graph', wallet_graph_data, wallet_graph_layout);
 }
 
 // TRANSACTIONS
@@ -439,7 +458,13 @@ function transactionManager() {
       && to > 0 && to < WALLET_COUNT
       && amount > 0 && amount <= WALLETS.get(0)._solde) {
 
-      TRANSACTIONS.transact(WALLETS.get(0), WALLETS.get(to), amount)
+      let walletA = WALLETS.get(0)
+      let walletB = WALLETS.get(to);
+      TRANSACTIONS.transact(walletA, walletB, amount)
+
+      wallet_graph_data[0]['x'][0] -= amount;
+      wallet_graph_data[0]['x'][to] += amount;
+      Plotly.update(walletGraph.elt, wallet_graph_data, wallet_graph_layout);
     }
 
     toSend = null
@@ -447,17 +472,22 @@ function transactionManager() {
 
   transactionCooldown -= deltaTime * TIME_SPEED;
   if (transactionCooldown <= 0) {
-    walletA = Math.floor(Math.random() * (WALLET_COUNT - 1) + 1)
-    walletB = Math.floor(Math.random() * (WALLET_COUNT - 1) + 1)
-    if (walletA == walletB) walletB = 0
+    walletIdA = Math.floor(Math.random() * (WALLET_COUNT - 1) + 1)
+    walletIdB = Math.floor(Math.random() * (WALLET_COUNT - 1) + 1)
+    if (walletIdA == walletIdB) walletIdB = 0
 
-    amount = WALLETS.get(walletA).credits * 0.1; // 10% of credits
+    let walletA = WALLETS.get(walletIdA);
+    let walletB = WALLETS.get(walletIdB);
+    amount = walletA.credits * 0.1; // 10% of credits
     amount = Math.round(amount * 100) / 100; // round to 2 decimals
     amount = Math.max(TRANSACTIONS_AMOUNT_MIN, amount); // minimum credits per transaction
 
-    TRANSACTIONS.transact(WALLETS.get(walletA), WALLETS.get(walletB), amount)
-
+    TRANSACTIONS.transact(walletA, walletB, amount)
     transactionCooldown = Math.floor(Math.random() * (TRANSACTION_COOLDOWN.max - TRANSACTION_COOLDOWN.min) + TRANSACTION_COOLDOWN.min)
+
+    wallet_graph_data[0]['x'][walletIdA] -= amount;
+    wallet_graph_data[0]['x'][walletIdB] += amount;
+    Plotly.update(walletGraph.elt, wallet_graph_data, wallet_graph_layout);
   }
 }
 
@@ -502,7 +532,6 @@ function minersManager() {
 
   minerCooldown -= deltaTime * TIME_SPEED;
   if (minerCooldown <= 0) {
-
     if (TRANSACTIONS.length > 0) {
       const transactionCount = Math.min(TRANSACTIONS.length, MAX_TRANSACTION_PER_BLOCK)
       const trs = []
