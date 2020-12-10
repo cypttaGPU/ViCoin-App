@@ -124,7 +124,7 @@ let blockDataToString = (data) => {
 let resetBlockInfo = (block) => {
   const {title, pHash, vHash, cHash, trs, miner} = blockInfo
 
-  title.innerText = block.id ? `Block #${block.id}` : 'GenesisBlock'
+  title.innerText = block.id ? `Block #${block.id}` : 'Genesis Block'
 
   pHash.innerText = block.previousHash || 'None'
 
