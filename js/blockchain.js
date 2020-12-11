@@ -138,7 +138,6 @@ const BLOCKCHAIN = new class {
     if (previousBlock.id + 1 !== newBlock.id)
       return false;
 
-    // TODO: Check online if this is the correct way to do this
     if (previousBlock.timestamp > newBlock.timestamp)
       return false;
 

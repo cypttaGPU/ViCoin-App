@@ -44,7 +44,6 @@ const TRANSACTIONS = new class {
         if(this._transactions_pool.length > 0) {
             let transaction = this._transactions_pool.shift();
             if(transaction instanceof Transaction) {
-                // WALLETS.transfert_credit(transaction._id_src, transaction._id_dest, transaction._montant);
                 WALLETS.get(transaction._id_dest).addCredit(transaction._montant);
                 if (VERBOSE_TRANSACTION) console.log("Transaction successful !");
                 return transaction;

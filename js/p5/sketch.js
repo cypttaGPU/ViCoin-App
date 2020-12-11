@@ -7,9 +7,6 @@ const BLOCK_MAX_SIZE = 128;
 const BLOCK_SPACING_RATIO = 0.5;
 
 // Variables
-// let blockSize = () => Math.min(BLOCK_MAX_SIZE, height * BLOCK_MIN_SIZE_HEIGHT_RATIO)
-// let blockSpacing = (size) => size * BLOCK_SPACING_RATIO
-// let blockPositionX = (i, size, halfSize, spacing, width) => (width / 2) - ((spacing + size) * i)
 let blockShowCount = (size, spacing, width) => Math.floor(width / (size + spacing)) + 2
 
 let roundNumber = (n, modifier = 0.01) => Math.round(n / modifier) * modifier
@@ -399,8 +396,6 @@ function setupTransactions() {
   const to = document.getElementById('transaction-to');
   const send = document.getElementById('transaction-send');
 
-  // div.position(width / 2 - div.width / 2, height / 2 - div.height / 2)
-
   for (var i = 1; i < WALLET_COUNT; i += 1) {
     const option = document.createElement('OPTION')
     option.label = WALLET_INFO[i].name
@@ -529,8 +524,6 @@ function setupMiners() {
   const send = document.getElementById('miner-send')
   const transfer_to_wallet = document.getElementById('miner-send-to-wallet');
 
-  // div.position(width / 2 - div.width / 2, height / 2 - 50)
-
   send.onclick = () => {
     userMined = true
   }
@@ -597,7 +590,7 @@ function minersManager() {
 }
 
 function drawMiners() {
-  // Updat eminer form
+  // Update miner form
   mineForm.send.disabled = TRANSACTIONS.length === 0
 
   textAlign('right')
