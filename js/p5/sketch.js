@@ -125,11 +125,13 @@ let blockDataToString = (data) => {
   return str
 }
 let resetBlockInfo = (block) => {
-  const {title, pHash, vHash, cHash, trs, miner} = blockInfo
+  const {title, timestamp, pHash, vHash, cHash, trs, miner} = blockInfo
 
   title.innerText = block.id ? `Block #${block.id}` : 'Genesis Block'
 
   pHash.innerText = block.previousHash || 'None'
+
+  timestamp.innerText = new Date(block.timestamp).toUTCString()
 
   vHash.innerText = block.hash
 
@@ -149,11 +151,13 @@ function setupBlockChain() {
   let reset = document.getElementById('block-info-reset')
   let close = document.getElementById('block-info-close')
   let title = document.getElementById('block-info-title')
+  let timestamp = document.getElementById('block-info-timestamp')
   let pHash = document.getElementById('block-info-previous-hash')
   let vHash = document.getElementById('block-info-valid-hash')
   let cHash = document.getElementById('block-info-current-hash')
   let trs = document.getElementById('block-info-transactions')
   let miner = document.getElementById('block-info-miner')
+  
 
   div.size(div.width, height * 0.8 - SIZE_BIG_HALF - SPACING)
 
@@ -172,7 +176,7 @@ function setupBlockChain() {
     if (blockInvalidated) randomHash = Block.calculateBlockHash()
   }
 
-  blockInfo = {mask, div, reset, close, title, pHash, vHash, cHash, trs, miner}
+  blockInfo = {mask, div, reset, close, title, timestamp, pHash, vHash, cHash, trs, miner}
 
   // Block chainbuttons
   div = select('#block-buttons')
@@ -336,6 +340,7 @@ let wallet_graph_layout = {
   plot_bgcolor: "rgba(0, 0, 0, 0)",
   font: {
     color: "#ffffff",
+    size: 11,
   },
   margin: {
     t: 40,
@@ -351,8 +356,10 @@ let wallet_graph_layout = {
     title : "ViCoin amount",
   },
   yaxis: {
-    gridcolor: "#ffffff",
     categoryorder: "total ascending",
+    padding: {
+      t: 50
+    }
   }
 };
 function setupWallets() {
@@ -469,8 +476,8 @@ function transactionManager() {
 
       wallet_graph_data[0]['x'][0] -= amount;
       wallet_graph_data[0]['x'][to] += amount;
-      wallet_graph_data[0]['text'][0] = walletA.credits;
-      wallet_graph_data[0]['text'][to] = walletB.credits;
+      wallet_graph_data[0]['text'][0] = walletA.credits.toFixed(2);
+      wallet_graph_data[0]['text'][to] = walletB.credits.toFixed(2);
       Plotly.update(walletGraph.elt, wallet_graph_data, wallet_graph_layout);
     }
 
@@ -494,8 +501,8 @@ function transactionManager() {
 
     wallet_graph_data[0]['x'][walletIdA] -= amount;
     wallet_graph_data[0]['x'][walletIdB] += amount;
-    wallet_graph_data[0]['text'][walletIdA] = walletA.credits;
-    wallet_graph_data[0]['text'][walletIdB] = walletB.credits;
+    wallet_graph_data[0]['text'][walletIdA] = walletA.credits.toFixed(2);
+    wallet_graph_data[0]['text'][walletIdB] = walletB.credits.toFixed(2);
     Plotly.update(walletGraph.elt, wallet_graph_data, wallet_graph_layout);
   }
 }
@@ -508,9 +515,10 @@ const MINERS = [
   {name: "Miner D", credits: 0.0},
 ]
 
-const MAX_TRANSACTION_PER_BLOCK = 5
+const MAX_TRANSACTION_PER_BLOCK = 3
 const FORCE_MINE_TRANSACTION_COUNT = 15
-const MINER_COOLDOWN = { min: TRANSACTION_COOLDOWN.min * 2, max: TRANSACTION_COOLDOWN.max * MAX_TRANSACTION_PER_BLOCK }
+const MINER_COOLDOWN = { min: TRANSACTION_COOLDOWN.min * 0.9, max: TRANSACTION_COOLDOWN.max * MAX_TRANSACTION_PER_BLOCK }
+let BLOCK_MINING_GAIN = 32;
 let minerCooldown = MINER_COOLDOWN.max;
 let userMined = false
 let mineForm
@@ -518,11 +526,20 @@ let mineForm
 function setupMiners() {
   const div = select('#miner-form')
   const send = document.getElementById('miner-send')
+  const transfer_to_wallet = document.getElementById('miner-send-to-wallet');
 
   // div.position(width / 2 - div.width / 2, height / 2 - 50)
 
   send.onclick = () => {
     userMined = true
+  }
+
+  transfer_to_wallet.onclick = () => {
+    let w = WALLETS.get(0);
+    w.addCredit(MINERS[0].credits);
+    wallet_graph_data[0]['text'][0] = w.credits.toFixed(2);
+    Plotly.update(walletGraph.elt, wallet_graph_data, wallet_graph_layout);
+    MINERS[0].credits = 0.0;
   }
 
   mineForm = {div, send}
@@ -554,12 +571,15 @@ function minersManager() {
       // Chose miner to gain the fee.
       var minerIndex = userMined ? 0 : Math.floor(Math.random() * (MINERS.length - 1) + 1)
       var miner = MINERS[minerIndex]
-      miner.credits += transactionCount * 0.01
+      miner.credits += BLOCK_MINING_GAIN;
 
       // Add block
       const newBlock = BLOCKCHAIN.generateNextBlock(trs, minerIndex)
       BLOCKCHAIN.insertBlock(newBlock)
 
+      if(BLOCKCHAIN.length % 10 === 0) 
+        BLOCK_MINING_GAIN /= 2;
+      
       if (selectedBlock === BLOCKCHAIN.length - 2) {
         selectedBlock += 1
         resetBlockInfo(BLOCKCHAIN.getBlock(selectedBlock))
