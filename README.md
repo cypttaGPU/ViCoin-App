@@ -28,7 +28,7 @@ De plus, afin de répondre aux exigences du cours, notre programme contient éga
     - <a href="https://bitcoin.org/bitcoin.pdf">https://bitcoin.org/bitcoin.pdf</a>, que nous avons simplifié
 
 # Motivation
-Il se trouve que deux de nos membres connaissaient les monnaies virtuelles et que l'un d'eux les utilisent fréquemment. Notre désir était tout d'abord d'apprendre à notre collègue le fonctionnement derrière ce type de monnaie et réussir à créer une visualisation qui permettra à d'autres personnes externes d'y parvenir également.
+Il se trouve que deux de nos membres connaissaient les monnaies virtuelles et que l'un d'eux les utilise fréquemment. Notre désir était tout d'abord d'apprendre à notre collègue le fonctionnement derrière ce type de monnaie et réussir à créer une visualisation qui permettra à d'autres personnes externes d'y parvenir également.
 
 # Utilisation du programme
 Le programme est disponible en ligne avec le lien: <a href="https://cypttagpu.github.io/ViCoin-App/">https://cypttagpu.github.io/ViCoin-App/</a>.
