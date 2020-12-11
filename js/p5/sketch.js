@@ -310,6 +310,7 @@ function drawBlockChain() {
     fill(255)
     noStroke()
     textAlign('center')
+    text(`Block #${i}`, x - 4, -48)
     text(`${trCount || 'No'} transaction${trCount === 1 ? '' : 's'}`, x - 4, -10)
     if (minerIndex >= 0)
       text(`Mined by ${MINERS[minerIndex].name}`, x - 4, 10)
